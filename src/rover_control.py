@@ -5,6 +5,8 @@ import http.server
 import socketserver
 import websockets
 
+from test_motors import test_motors
+
 from aiohttp import web
 
 
