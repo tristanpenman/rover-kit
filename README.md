@@ -15,6 +15,12 @@ This is all wired up with an assortment of resistors, jumper wires, and breadboa
 
 Power to the Motor HAT is provided by a 12V battery pack. And power to the Raspberry Pi is provided by a portable USB power supply.
 
+### Inspiration
+
+This project is inspired a series of blog posts that Mat Kelcey wrote about building a rover (I've used the same basic parts) and training it to move around autonomously.
+
+My project is less ambitious. Seeing what he did made me think it would be fun just to tackle it as a hardware hacking project.
+
 ### Early Prototype
 
 When I first started this project, I was using a regular Raspberry Pi 3.
