@@ -17,7 +17,21 @@ Power to the Motor HAT is provided by a 12V battery pack. And power to the Raspb
 
 ### Early Prototype
 
-![An early prototype](./photos/01-early-prototype.jpeg)
+When I first started this project, I was using a regular Raspberry Pi 3.
+
+I eventually switched to using a Raspberry Pi Zero W, so that power usage and space requirements would be reduced.
+
+![Switching to Raspberry Pi Zero W](./photos/01-switching-to-pi-zero.jpeg)
+
+Two front were not attached when I took this photo.
+
+I'm part way through wiring up the final sensor interface board:
+
+![Half way through sensor interface board](./photos/03-half-way.jpeg)
+
+This is slow going, because I'm new to soldering.
+
+Other photos can be found [here](./photos).
 
 ## Python
 
