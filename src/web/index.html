@@ -1,40 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 <head>
-  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Rover Control</title>
+
+  <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-  <script>
-    const messages = document.createElement('ul');
-    document.body.appendChild(messages);
-
-    const ws = new WebSocket("ws://" + location.host + "/ws");
-
-    ws.onerror = (event) => {
-      console.error('error', {
-        event
-      });
-
-      const message = document.createElement('li');
-      const content = document.createTextNode("error: " + event);
-      message.appendChild(content);
-      messages.appendChild(message);
-    };
-
-    ws.onopen = (event) => {
-      const message = document.createElement('li');
-      const content = document.createTextNode("open");
-      message.appendChild(content);
-      messages.appendChild(message);  
-    };
-
-    ws.onmessage = function (event) {
-      const message = document.createElement('li');
-      const content = document.createTextNode("message: " + event.data);
-      message.appendChild(content);
-      messages.appendChild(message);
-    };
-  </script>
+  <div id="app"></div>
+  <script src="js/app.js" type="text/javascript"></script>
 </body>
 </html>

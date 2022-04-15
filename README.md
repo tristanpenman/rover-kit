@@ -48,16 +48,16 @@ The on-device scripts for controlling the rover are written in Python, and rely 
 
 Test scripts:
 
-* [test-motors.py](./src/test-motors.py) - starts and stops each motor in turn
-* [test-sensors.py](./src/test-sensors.py) - outputs a series of ultrasonic sensor readings
+* [test_motors.py](./src/test_motors.py) - starts and stops each motor in turn
+* [test_sensors.py](./src/test_sensors.py) - outputs a series of ultrasonic sensor readings
 
 Main control script:
 
-* [rover-control.py](./src/rover-control.py) - runs a web server that can be used to control the rover
+* [rover_control.py](./src/rover_control.py) - runs a web server that can be used to control the rover
 
 ## Rover Control
 
-The _Rover Control_ frontend, which is served by the [rover-control.py](./src/rover-control.py) script, is pretty ordinary HTML and JavaScript.
+The _Rover Control_ frontend, which is served by the [rover_control.py](./src/rover_control.py) script, is pretty ordinary HTML and JavaScript.
 
 The code can be found in [src/web](./src/web).
 

@@ -9,13 +9,12 @@ from aiohttp import web
 
 
 async def index_handler(request):
-    return web.FileResponse('web/index.html')
+    return web.FileResponse('web/index.html');
 
 
 async def websocket_handler(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
-
     async for msg in ws:
         if msg.type == aiohttp.WSMsgType.TEXT:
             if msg.data == 'close':
@@ -32,8 +31,9 @@ def create_runner():
     app = web.Application()
     app.add_routes([
         web.get('/', index_handler),
-        web.get('/ws', websocket_handler),
+        web.get('/ws', websocket_handler)
     ])
+    app.router.add_static('/', path='web', name='web')
     return web.AppRunner(app)
 
 
