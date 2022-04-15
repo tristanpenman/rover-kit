@@ -1,0 +1,78 @@
+==> make -j2 in '/home/pi/ros_catkin_ws/build_isolated/roscpp'
+[  0%] Built target _catkin_empty_exported_target
+[  0%] Built target _roscpp_generate_messages_check_deps_Logger
+[  0%] Built target _roscpp_generate_messages_check_deps_GetLoggers
+[  0%] Built target _roscpp_generate_messages_check_deps_Empty
+[  0%] Built target _roscpp_generate_messages_check_deps_SetLoggerLevel
+[  0%] Built target rosgraph_msgs_generate_messages_lisp
+[  0%] Built target rosgraph_msgs_generate_messages_cpp
+[  0%] Built target rosgraph_msgs_generate_messages_eus
+[  0%] Built target std_msgs_generate_messages_cpp
+[  0%] Built target rosgraph_msgs_generate_messages_nodejs
+[  1%] Built target rosgraph_msgs_generate_messages_py
+[  1%] Generating Javascript code from roscpp/Logger.msg
+[  1%] Built target std_msgs_generate_messages_eus
+[  2%] Generating Javascript code from roscpp/Empty.srv
+[  2%] Built target std_msgs_generate_messages_nodejs
+[  4%] Generating Javascript code from roscpp/GetLoggers.srv
+[  4%] Built target std_msgs_generate_messages_py
+[  5%] Generating Javascript code from roscpp/SetLoggerLevel.srv
+[  7%] Generating C++ code from roscpp/Logger.msg
+[  7%] Built target roscpp_generate_messages_nodejs
+[  8%] Generating C++ code from roscpp/Empty.srv
+[  8%] Built target std_msgs_generate_messages_lisp
+[  9%] Generating C++ code from roscpp/GetLoggers.srv
+[ 11%] Generating C++ code from roscpp/SetLoggerLevel.srv
+[ 12%] Generating Python from MSG roscpp/Logger
+[ 12%] Built target roscpp_generate_messages_cpp
+[ 14%] Generating Python code from SRV roscpp/Empty
+[ 15%] Generating EusLisp code from roscpp/Logger.msg
+[ 16%] Generating Python code from SRV roscpp/GetLoggers
+[ 18%] Generating EusLisp code from roscpp/Empty.srv
+[ 19%] Generating Python code from SRV roscpp/SetLoggerLevel
+[ 21%] Generating EusLisp code from roscpp/GetLoggers.srv
+[ 22%] Generating Python msg __init__.py for roscpp
+[ 23%] Generating EusLisp code from roscpp/SetLoggerLevel.srv
+[ 25%] Generating Python srv __init__.py for roscpp
+[ 25%] Built target roscpp_generate_messages_py
+[ 26%] Generating EusLisp manifest code for roscpp
+[ 28%] Generating Lisp code from roscpp/Logger.msg
+[ 29%] Generating Lisp code from roscpp/Empty.srv
+[ 30%] Generating Lisp code from roscpp/GetLoggers.srv
+[ 32%] Generating Lisp code from roscpp/SetLoggerLevel.srv
+[ 32%] Built target roscpp_generate_messages_lisp
+[ 32%] Built target roscpp_generate_messages_eus
+[ 32%] Built target roscpp_generate_messages
+Scanning dependencies of target roscpp
+[ 33%] Building CXX object CMakeFiles/roscpp.dir/src/libros/service_publication.cpp.o
+[ 35%] Building CXX object CMakeFiles/roscpp.dir/src/libros/publication.cpp.o
+[ 36%] Building CXX object CMakeFiles/roscpp.dir/src/libros/statistics.cpp.o
+[ 38%] Building CXX object CMakeFiles/roscpp.dir/src/libros/rosout_appender.cpp.o
+In file included from /opt/ros/kinetic/include/ros/assert.h:35:0,
+                 from /home/pi/ros_catkin_ws/devel_isolated/roscpp/include/ros/common.h:36,
+                 from /home/pi/ros_catkin_ws/src/ros_comm/roscpp/include/ros/io.h:45,
+                 from /home/pi/ros_catkin_ws/src/ros_comm/roscpp/include/ros/poll_set.h:39,
+                 from /home/pi/ros_catkin_ws/src/ros_comm/roscpp/include/ros/statistics.h:32,
+                 from /home/pi/ros_catkin_ws/src/ros_comm/roscpp/src/libros/statistics.cpp:28:
+/home/pi/ros_catkin_ws/src/ros_comm/roscpp/src/libros/statistics.cpp: In member function ‘void ros::StatisticsLogger::callback(const boost::shared_ptr<std::map<std::basic_string<char>, std::basic_string<char> > >&, const string&, const string&, const ros::SerializedMessage&, const uint64_t&, const ros::Time&, bool)’:
+/opt/ros/kinetic/include/ros/console.h:346:176: warning: format ‘%li’ expects argument of type ‘long int’, but argument 9 has type ‘unsigned int’ [-Wformat=]
+     ::ros::console::print(filter, __rosconsole_define_location__loc.logger_, __rosconsole_define_location__loc.level_, __FILE__, __LINE__, __ROSCONSOLE_FUNCTION__, __VA_ARGS__)
+                                                                                                                                                                                ^
+/opt/ros/kinetic/include/ros/console.h:349:5: note: in expansion of macro ‘ROSCONSOLE_PRINT_AT_LOCATION_WITH_FILTER’
+     ROSCONSOLE_PRINT_AT_LOCATION_WITH_FILTER(0, __VA_ARGS__)
+     ^
+/opt/ros/kinetic/include/ros/console.h:379:7: note: in expansion of macro ‘ROSCONSOLE_PRINT_AT_LOCATION’
+       ROSCONSOLE_PRINT_AT_LOCATION(__VA_ARGS__); \
+       ^
+/opt/ros/kinetic/include/ros/console.h:561:35: note: in expansion of macro ‘ROS_LOG_COND’
+ #define ROS_LOG(level, name, ...) ROS_LOG_COND(true, level, name, __VA_ARGS__)
+                                   ^
+/opt/ros/kinetic/include/rosconsole/macros_generated.h:58:24: note: in expansion of macro ‘ROS_LOG’
+ #define ROS_DEBUG(...) ROS_LOG(::ros::console::levels::Debug, ROSCONSOLE_DEFAULT_NAME, __VA_ARGS__)
+                        ^
+/home/pi/ros_catkin_ws/src/ros_comm/roscpp/src/libros/statistics.cpp:107:7: note: in expansion of macro ‘ROS_DEBUG’
+       ROS_DEBUG("Error during header extraction for statistics (topic=%s, message_length=%li)", topic.c_str(), m.num_bytes - (m.message_start - m.buf.get()));
+       ^
+[ 39%] Building CXX object CMakeFiles/roscpp.dir/src/libros/init.cpp.o
+[ 40%] Linking CXX shared library /home/pi/ros_catkin_ws/devel_isolated/roscpp/lib/libroscpp.so
+[100%] Built target roscpp
