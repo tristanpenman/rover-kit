@@ -21,10 +21,25 @@ Power to the Motor HAT is provided by a 12V battery pack. And power to the Raspb
 
 ## Python
 
-The scripts for controlling the rover are written in Python, and rely on some very useful libraries:
+The on-device scripts for controlling the rover are written in Python, and rely on some very useful libraries:
 
 * [Adafruit_CircuitPython_MotorKit](https://github.com/adafruit/Adafruit_CircuitPython_MotorKit)
 * [RPi.GPIO](https://pypi.org/project/RPi.GPIO)
+
+Test scripts:
+
+* [test-motors.py](./src/test-motors.py) - starts and stops each motor in turn
+* [test-sensors.py](./src/test-sensors.py) - outputs a series of ultrasonic sensor readings
+
+Main control script:
+
+* [rover-control.py](./src/rover-control.py) - runs a web server that can be used to control the rover
+
+## Rover Control
+
+The _Rover Control_ frontend, which is served by the [rover-control.py](./src/rover-control.py) script, is pretty ordinary HTML and JavaScript.
+
+The code can be found in [src/web](./src/web).
 
 ## License
 
