@@ -19,6 +19,13 @@ Power to the Motor HAT is provided by a 12V battery pack. And power to the Raspb
 
 ![An early prototype](./photos/01-early-prototype.jpeg)
 
+## Python
+
+The scripts for controlling the rover are written in Python, and rely on some very useful libraries:
+
+* [Adafruit_CircuitPython_MotorKit](https://github.com/adafruit/Adafruit_CircuitPython_MotorKit)
+* [RPi.GPIO](https://pypi.org/project/RPi.GPIO)
+
 ## License
 
 This code is licensed under the MIT License.
