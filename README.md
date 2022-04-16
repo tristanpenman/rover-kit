@@ -9,7 +9,7 @@ The rover is based on the following parts:
 * [Whippersnapper Runt Rover](https://www.servocity.com/whippersnapper-runt-rover)
 * [Raspberry Pi Zero W](https://www.raspberrypi.com/products/raspberry-pi-zero-w)
 * [Adafruit DC & Stepper Motor HAT](https://www.adafruit.com/product/2348)
-* [HC-SR04 Ultrasonic Distance Sensor](https://www.sparkfun.com/products/15569) (x5)
+* [HC-SR04 Ultrasonic Distance Sensor](https://www.sparkfun.com/products/15569) (x4)
 
 This is all wired up with an assortment of resistors, jumper wires, and breadboards.
 
@@ -29,19 +29,21 @@ I eventually switched to using a Raspberry Pi Zero W, so that power usage and sp
 
 ![Switching to Raspberry Pi Zero W](./photos/01-switching-to-pi-zero.jpeg)
 
-Two front were not attached when I took this photo.
+The two front sensors were not attached when I took this photo.
 
-I'm part way through wiring up the final sensor interface board:
+Part way through soldering the final sensor interface board (this was very slow, because I'm new to soldering):
 
 ![Half way through sensor interface board](./photos/03-half-way.jpeg)
 
-This is slow going, because I'm new to soldering.
+It all felt much neater with the new interface board. Now to figure out wiring:
+
+![Figuring out wiring after soldering was complete](./photos/04-figuring-out-wiring.jpeg)
 
 Other photos can be found [here](./photos).
 
 ## Python
 
-The on-device scripts for controlling the rover are written in Python, and rely on some very useful libraries:
+The scripts for controlling the rover are written in Python, and rely on some very useful libraries:
 
 * [Adafruit_CircuitPython_MotorKit](https://github.com/adafruit/Adafruit_CircuitPython_MotorKit)
 * [RPi.GPIO](https://pypi.org/project/RPi.GPIO)
@@ -57,7 +59,12 @@ Main control script:
 
 ## Rover Control
 
-The _Rover Control_ frontend, which is served by the [rover_control.py](./src/rover_control.py) script, is pretty ordinary HTML and JavaScript.
+The _Rover Control_ frontend, which is served by the [rover_control.py](./src/rover_control.py) script, is pretty ordinary HTML and JavaScript. It currently provides the following commands:
+
+* Forwards
+* Backwards
+* Spin Clockwise
+* Spin Counter-clockwise
 
 The code can be found in [src/web](./src/web).
 
