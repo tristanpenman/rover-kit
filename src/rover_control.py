@@ -51,7 +51,7 @@ def spin_ccw():
 
 
 async def index_handler(request):
-    return web.FileResponse('web/index.html');
+    return web.FileResponse('web/index.html')
 
 
 async def websocket_handler(request):
