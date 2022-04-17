@@ -3,6 +3,7 @@
 import aiohttp
 import asyncio
 import http.server
+import os
 import socketserver
 import time
 import websockets
@@ -13,6 +14,8 @@ from adafruit_motorkit import MotorKit
 
 
 kit = MotorKit()
+
+script_dir = os.path.dirname(__file__)
 
 
 def stop():
@@ -93,7 +96,7 @@ def create_runner():
         web.get('/', index_handler),
         web.get('/ws', websocket_handler)
     ])
-    app.router.add_static('/', path='web', name='web')
+    app.router.add_static('/', path=os.path.join(script_dir, 'web'), name='web')
     return web.AppRunner(app)
 
 
