@@ -65,23 +65,18 @@ async def websocket_handler(request):
             if msg.data == 'forwards':
                 await ws.send_str('forwards')
                 forwards()
-                await ws.send_str('ok')
             elif msg.data == 'backwards':
                 await ws.send_str('backwards')
                 backwards()
-                await ws.send_str('ok')
             elif msg.data == 'spin_cw':
                 await ws.send_str('spin_cw')
                 spin_cw()
-                await ws.send_str('ok')
             elif msg.data == 'spin_ccw':
                 await ws.send_str('spin_ccw')
                 spin_ccw()
-                await ws.send_str('ok')
             elif msg.data == 'stop':
                 await ws.send_str('stop')
                 stop()
-                await ws.send_str('ok')
             else:
                 await ws.send_str('some websocket message payload: ' + msg.data)
         elif msg.type == aiohttp.WSMsgType.ERROR:
