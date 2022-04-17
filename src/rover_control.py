@@ -3,6 +3,7 @@
 import aiohttp
 import asyncio
 import http.server
+import json
 import os
 import socketserver
 import time
@@ -12,6 +13,7 @@ from aiohttp import web
 
 from adafruit_motorkit import MotorKit
 
+threshold = 0.5
 
 kit = MotorKit()
 
@@ -53,6 +55,16 @@ def spin_ccw():
     kit.motor4.throttle = -1
 
 
+def throttle(value):
+    if abs(value) > threshold:
+        kit.motor1.throttle = value
+        kit.motor2.throttle = -value
+        kit.motor3.throttle = value
+        kit.motor4.throttle = -value
+    else:
+        stop()
+
+
 async def index_handler(request):
     return web.FileResponse('web/index.html')
 
@@ -62,23 +74,33 @@ async def websocket_handler(request):
     await ws.prepare(request)
     async for msg in ws:
         if msg.type == aiohttp.WSMsgType.TEXT:
-            if msg.data == 'forwards':
-                await ws.send_str('forwards')
-                forwards()
-            elif msg.data == 'backwards':
-                await ws.send_str('backwards')
-                backwards()
-            elif msg.data == 'spin_cw':
-                await ws.send_str('spin_cw')
-                spin_cw()
-            elif msg.data == 'spin_ccw':
-                await ws.send_str('spin_ccw')
-                spin_ccw()
-            elif msg.data == 'stop':
-                await ws.send_str('stop')
-                stop()
-            else:
-                await ws.send_str('some websocket message payload: ' + msg.data)
+            print(msg.data)
+            try:
+                payload = json.loads(msg.data)
+                print(payload)
+                if payload['type'] == 'forwards':
+                    await ws.send_str('forwards')
+                    forwards()
+                elif payload['type'] == 'backwards':
+                    await ws.send_str('backwards')
+                    backwards()
+                elif payload['type'] == 'spin_cw':
+                    await ws.send_str('spin_cw')
+                    spin_cw()
+                elif payload['type'] == 'spin_ccw':
+                    await ws.send_str('spin_ccw')
+                    spin_ccw()
+                elif payload['type'] == 'stop':
+                    await ws.send_str('stop')
+                    stop()
+                elif payload['type'] == 'throttle':
+                    await ws.send_str('throttle');
+                    throttle(payload['value']);
+                else:
+                    await ws.send_str('invalid payload type: ' + payload['type'])
+            except json.JSONDecodeError as err:
+                await ws.send_str('bad request: ' + err.msg)
+
         elif msg.type == aiohttp.WSMsgType.ERROR:
             print('ws connection closed with exception %s' % ws.exception())
 

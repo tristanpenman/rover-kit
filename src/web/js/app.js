@@ -13,16 +13,17 @@ messages.id = 'messages';
 document.body.appendChild(messages);
 
 let ws;
+let throttle;
 
 const addButton = (text, command) => {
   const button = document.createElement('button');
   buttons.appendChild(button);
   button.innerText = text;
   button.ontouchstart = button.onmousedown = (event) => {
-    ws.send(command);
+    ws.send(JSON.stringify({ type: command }));
   };
   button.ontouchend = button.onmouseup = (event) => {
-    ws.send('stop');
+    ws.send(JSON.stringify({ type: 'stop' }));
   };
 };
 
@@ -56,15 +57,15 @@ const attemptConnect = () => {
       event
     });
 
-    addMessage('error');
+    addMessage('ws error');
   };
 
   ws.onopen = (event) => {
-    addMessage('open');
+    addMessage('ws open');
   };
 
   ws.onmessage = (event) => {
-    addMessage('message: ' + event.data);
+    addMessage('ws message: ' + event.data);
   };
 };
 
@@ -78,3 +79,28 @@ addButton('Spin Counter-clockwise', 'spin_ccw');
 for (i = 0; i < maxMessages; i++) {
   addMessage('');
 }
+
+const gamepadInput = (gamepadIndex) => {
+  const gamepads = navigator.getGamepads();
+  const gamepad = gamepads[gamepadIndex];
+  if (gamepad && gamepad.connected) {
+    const newThrottle =  -gamepad.axes[1];
+    if (newThrottle != throttle) {
+      throttle = newThrottle;
+      ws.send(JSON.stringify({
+        type: 'throttle',
+        value: -throttle
+      }));
+    }
+    window.requestAnimationFrame(() => gamepadInput(gamepadIndex));
+  } else {
+    addMessage('gamepad no longer connected');
+    ws.send(JSON.stringify({ type: 'stop' }));
+  }
+};
+
+window.addEventListener('gamepadconnected', (event) => {
+  addMessage('game pad connected');
+  const { gamepad } = event;
+  window.requestAnimationFrame(() => gamepadInput(gamepad.index));
+});
