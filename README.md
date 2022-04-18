@@ -2,6 +2,8 @@
 
 Adventures in building a toy rover that can respond to commands over Wi-Fi and send back readings from ultrasonic distance sensors.
 
+![Sensor mounted, not quite wired up...](./photos/05-sensors-mounted.jpeg)
+
 ## Parts
 
 The rover is based on the following parts:
@@ -50,12 +52,12 @@ The scripts for controlling the rover are written in Python, and rely on some ve
 
 Test scripts:
 
-* [test_motors.py](./src/test_motors.py) - starts and stops each motor in turn
-* [test_sensors.py](./src/test_sensors.py) - outputs a series of ultrasonic sensor readings
+* [test-motors.py](./src/test-motors.py) - starts and stops each motor in turn
+* [test-sensors.py](./src/test-sensors.py) - outputs a series of ultrasonic sensor readings
 
 Main control script:
 
-* [rover_control.py](./src/rover_control.py) - runs a web server that can be used to control the rover
+* [rover-control.py](./src/rover-control.py) - runs a web server that can be used to control the rover
 
 ## Rover Control
 
