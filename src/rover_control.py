@@ -111,7 +111,11 @@ async def distance():
         # Publish distance measurement to all connected clients
         msg = json.dumps({'type': 'distance', 'value': distance})
         for ws in websockets:
-            await ws.send_str(msg)
+            try:
+                await ws.send_str(msg)
+            except ConnectionResetError:
+                print('error sending distance; removing websocket')
+                websockets.remove(ws)
 
         await asyncio.sleep(1)
 
@@ -159,6 +163,7 @@ async def websocket_handler(request):
 
         elif msg.type == aiohttp.WSMsgType.ERROR:
             print('ws connection closed with exception %s' % ws.exception())
+            websockets.remove(ws)
 
     return ws
 
