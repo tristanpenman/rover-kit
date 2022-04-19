@@ -21,8 +21,16 @@ h3 {
   margin-top: 10px;
 }
 
+#buttons {
+  display: flex;
+  justify-content: space-between;
+  justify-items: flex-start;
+  width: 100%;
+}
+
 #buttons > button {
-  margin-right: 5px;
+  height: 40px;
+  width: 24%;
 }
 
 #messages {
