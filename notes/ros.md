@@ -45,10 +45,6 @@ Experimental pi 2 support:
 
 Should be possible to deploy this image directly to the Raspberry Pi.
 
-## Increase swap space
-
-    ...
-
 ## WPA supplicant
 
 Example /etc/wpa_supplicant/wpa_supplicant.conf:
@@ -162,4 +158,3 @@ Dependencies (other than `sensor_msgs` package):
     ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release
 
     source ~/ros_catkin_ws/install_isolated/setup.bash
-
