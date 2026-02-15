@@ -15,3 +15,41 @@ Shared packages include:
 - `pkg/sonar` - Defines a `SonarProvider` interface and local implementation using GPIO
 
 Communication between components will be handled by MQTT.
+
+## Local MQTT broker
+
+The [mqtt](mqtt) directory contains configuration for a [Mosquitto](https://mosquitto.org/) message broker. Mosquitto is a popular and light-weight message broker that implements the MQTT protocol.
+
+To start the local MQTT broker you'll need to use Docker Compose.
+
+From the `go` directory:
+
+```bash
+docker compose up -d mqtt
+```
+
+To stop the broker:
+
+```bash
+docker compose down
+```
+
+### Injecting Commands
+
+Publish a command to MQTT, you can use `mosquitto_pub`:
+
+```bash
+mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"forwards"}'
+```
+
+To use `mosquitto_pub` on macOS, install `mosquitto` from Homebrew:
+
+```bash
+brew install mosquitto
+```
+
+Alternatively, you can run `mosquitto_pub` commands from within the `mqtt` Docker container created above:
+
+```bash
+docker compose exec mqtt mosquitto_pub -t rover/motor/command -m '{"type":"throttle","value":0.75}'
+```

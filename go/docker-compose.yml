@@ -1,0 +1,6 @@
+services:
+  mqtt:
+    build:
+      context: ./mqtt
+    ports:
+      - "1883:1883"
