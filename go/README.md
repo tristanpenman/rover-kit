@@ -16,7 +16,11 @@ Shared packages include:
 
 Communication between components will be handled by MQTT.
 
-## Local MQTT broker
+## Instructions
+
+This section describes how to start a message broker and connect to it via the three commands listed above.
+
+### Local MQTT broker
 
 The [mqtt](mqtt) directory contains configuration for a [Mosquitto](https://mosquitto.org/) message broker. Mosquitto is a popular and light-weight message broker that implements the MQTT protocol.
 
@@ -33,6 +37,20 @@ To stop the broker:
 ```bash
 docker compose down
 ```
+
+### Motor Control
+
+Next we start the `motor-control` command. This defaults using `tcp://localhost:1883` and topic `rover/motor/command` to subscribe to MQTT.
+
+```bash
+go run ./cmd/motor-control
+```
+
+Optional environment variables:
+
+- `MQTT_BROKER` (default `tcp://localhost:1883`)
+- `MQTT_TOPIC` (default `rover/motor/command`)
+- `MQTT_CLIENT_ID` (default is auto-generated)
 
 ### Injecting Commands
 
