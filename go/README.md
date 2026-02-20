@@ -10,7 +10,7 @@ This consists of three commands:
 
 Shared packages include:
 
-- `pkg/messages` - Message types, strongly-typed command/event models, and broker abstractions
+- `pkg/common` - Message types, strongly-typed command/event models, and broker abstractions
 - `pkg/motor` - Defines a `MotorDriver` interface and local implementation using GPIO
 - `pkg/sonar` - Defines a `SonarProvider` interface and local implementation using GPIO
 
@@ -40,7 +40,7 @@ docker compose down
 
 ### Motor Control
 
-Next we start the `motor-control` command. This defaults using `tcp://localhost:1883` and topic `rover/motor/command` to subscribe to MQTT.
+The `motor-control` command subscribes to `rover/motor/command` and expects JSON payloads in the typed command model.
 
 ```bash
 go run ./cmd/motor-control
@@ -54,10 +54,13 @@ Optional environment variables:
 
 ### Injecting Commands
 
-Publish a command to MQTT, you can use `mosquitto_pub`:
+If you have `mosquitto_pub` installed locally:
 
 ```bash
 mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"forwards"}'
+mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"spin_ccw"}'
+mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"throttle","value":0.75}'
+mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"stop"}'
 ```
 
 To use `mosquitto_pub` on macOS, install `mosquitto` from Homebrew:
