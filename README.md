@@ -45,15 +45,86 @@ Other photos can be found [here](./photos).
 
 ## Source
 
-There are two ways to run this project: _Python_ and _Go_.
+My original Python implementation can be found in the [python](./python/) directory.
 
-### Python
+The project has since been migrated to Go, with MQTT for message passsing. The rest of this file explains how to get up and running.
 
-My original implementation was written in Python. Instructions can be found in the [python](./python/) directory.
+## Layout
 
-### Go
+This consists of three commands:
 
-The project has since been migrated to Go.
+- `cmd/motor-control` - Subscribes to typed motor commands and invokes a `MotorDriver` implementation
+- `cmd/sonar-reader` - Consumes a `SonarProvider` implementation and publishes distance events
+- `cmd/web-bridge` - HTTP/WebSocket bridge from browser clients into broker topics
+
+Shared packages include:
+
+- `pkg/common` - Message types, strongly-typed command/event models, and broker abstractions
+- `pkg/motor` - Defines a `MotorDriver` interface and local implementation using GPIO
+- `pkg/sonar` - Defines a `SonarProvider` interface and local implementation using GPIO
+
+## MQTT
+
+Communication between components is handled by MQTT.
+
+This section describes how to start a message broker and connect to it via the three commands listed above.
+
+### Local MQTT broker
+
+The easiest way to get started is to use the [Mosquitto](https://mosquitto.org/) message broker. Mosquitto is a popular and light-weight message broker that implements the MQTT protocol.
+
+To start the local MQTT broker you'll need to use [Docker Compose](https://docs.docker.com/compose/):
+
+```bash
+docker compose up -d mqtt
+```
+
+To stop the broker:
+
+```bash
+docker compose down
+```
+
+## Components
+
+Thanks to MQTT, components can be developed and tested independently. Each component is encapsulated as a Go command. Commands subscribe only to the messages that are relevant to them, and may publish messages that are handled by other components.
+
+### Motor Control
+
+As an example, the `motor-control` command subscribes to `rover/motor/command` messages. Running the command will connect to MQTT using default configuration:
+
+```bash
+go run ./cmd/motor-control
+```
+
+MQTT configuration can be customised via environment variables:
+
+- `MQTT_BROKER` (default `tcp://localhost:1883`)
+- `MQTT_TOPIC` (default `rover/motor/command`)
+- `MQTT_CLIENT_ID` (default is auto-generated)
+
+### Injecting Commands
+
+If you have `mosquitto_pub` installed locally:
+
+```bash
+mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"forwards"}'
+mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"spin_ccw"}'
+mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"throttle","value":0.75}'
+mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"stop"}'
+```
+
+To use `mosquitto_pub` on macOS, install `mosquitto` from Homebrew:
+
+```bash
+brew install mosquitto
+```
+
+Alternatively, you can run `mosquitto_pub` commands from within the `mqtt` Docker container created above:
+
+```bash
+docker compose exec mqtt mosquitto_pub -t rover/motor/command -m '{"type":"throttle","value":0.75}'
+```
 
 ## License
 
