@@ -126,6 +126,19 @@ Alternatively, you can run `mosquitto_pub` commands from within the `mqtt` Docke
 docker compose exec mqtt mosquitto_pub -t rover/motor/command -m '{"type":"throttle","value":0.75}'
 ```
 
+## Tests
+
+Run the Go test suite from the `go` directory:
+
+```bash
+go test ./...
+```
+
+Current automated coverage focuses on:
+
+- command parsing behavior in `cmd/web-bridge`
+- environment fallback behavior in `pkg/common`
+
 ## License
 
 This code is licensed under the MIT License.
