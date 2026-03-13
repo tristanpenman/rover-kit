@@ -45,9 +45,9 @@ Other photos can be found [here](./photos).
 
 ## Source
 
-My original Python implementation can be found in the [python](./python/) directory.
+My original Python implementation can be found in the [python](./python) directory.
 
-The project has since been migrated to Go, with MQTT for message passsing. The rest of this file explains how to get up and running.
+The project has since been migrated to Go, with MQTT for message passing. The rest of this file explains how to get up and running.
 
 ## Layout
 
@@ -138,6 +138,16 @@ Current automated coverage focuses on:
 
 - command parsing behavior in `cmd/web-bridge`
 - environment fallback behavior in `pkg/common`
+
+## STM32
+
+One of my goals for this project is to move sonar sampling to an STM32 microcontroller (instead of using Linux GPIO on the Pi).
+
+This will involve:
+
+- Porting HC-SR04 trigger/echo timing loops to TinyGo GPIO.
+- Implementing a text-based JSON command/event protocol over USB CDC.
+- A split architecture where STM32 does real-time sampling and a host bridge forwards events.
 
 ## License
 
