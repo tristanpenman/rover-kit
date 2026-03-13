@@ -27,7 +27,7 @@ type commandEnvelope struct {
 	Type common.CommandType `json:"type"`
 }
 
-func handleMotorCommand(ctx context.Context, motorDriver driver.MotorDriver, payload []byte) error {
+func handleMotorCommand(ctx context.Context, motorDriver driver.Driver, payload []byte) error {
 	var envelope commandEnvelope
 	if err := json.Unmarshal(payload, &envelope); err != nil {
 		return fmt.Errorf("decode command envelope: %w", err)
@@ -76,7 +76,7 @@ func handleMotorCommand(ctx context.Context, motorDriver driver.MotorDriver, pay
 	}
 }
 
-func subscriber(ctx context.Context, driver common.DummyDriver) func(_ mqtt.Client, msg mqtt.Message) {
+func subscriber(ctx context.Context, driver driver.DummyDriver) func(_ mqtt.Client, msg mqtt.Message) {
 	return func(_ mqtt.Client, msg mqtt.Message) {
 		if err := handleMotorCommand(ctx, driver, msg.Payload()); err != nil {
 			log.Printf("failed to handle command topic=%s payload=%q err=%v", msg.Topic(), msg.Payload(), err)
@@ -88,7 +88,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	dummyDriver := common.DummyDriver{}
+	dummyDriver := driver.DummyDriver{}
 	brokerURL := common.EnvOrDefault("MQTT_BROKER", defaultBrokerURL)
 	topic := common.EnvOrDefault("MQTT_TOPIC", defaultTopic)
 	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("motor-control-%d", time.Now().UnixNano()))

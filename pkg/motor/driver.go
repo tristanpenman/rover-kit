@@ -1,8 +1,8 @@
-package driver
+package motor
 
 import "context"
 
-type MotorDriver interface {
+type Driver interface {
 	Forwards(ctx context.Context) error
 	Backwards(ctx context.Context) error
 	SpinCW(ctx context.Context) error
