@@ -20,6 +20,7 @@ import (
 
 const (
 	defaultBrokerURL = "tcp://localhost:1883"
+	defaultDriver    = "dummy"
 	defaultTopic     = "rover/motor/command"
 )
 
@@ -84,19 +85,42 @@ func subscriber(ctx context.Context, driver motor.Driver) func(_ mqtt.Client, ms
 	}
 }
 
+func createDriver(name string) (motor.Driver, func() error, error) {
+	switch name {
+	case "dummy":
+		return motor.DummyDriver{}, func() error { return nil }, nil
+	default:
+		return nil, nil, fmt.Errorf("unsupported MOTOR_DRIVER=%q", name)
+	}
+}
+
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	driver := motor.DummyDriver{}
-	brokerURL := common.EnvOrDefault("MQTT_BROKER", defaultBrokerURL)
-	topic := common.EnvOrDefault("MQTT_TOPIC", defaultTopic)
-	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("motor-control-%d", time.Now().UnixNano()))
+	// driver configuration
+	driverName := common.EnvOrDefault("MOTOR_DRIVER", defaultDriver)
+	driver, closeDriver, err := createDriver(driverName)
+	if err != nil {
+		log.Fatalf("failed to resolve motor driver: %v", err)
+	}
 
+	// driver cleanup
+	defer func() {
+		if err := closeDriver(); err != nil {
+			log.Printf("failed to close motor driver: %v", err)
+		}
+	}()
+
+	// mqtt configuration
+	brokerURL := common.EnvOrDefault("MQTT_BROKER", defaultBrokerURL)
+	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("motor-control-%d", time.Now().UnixNano()))
+	topic := common.EnvOrDefault("MQTT_TOPIC", defaultTopic)
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerURL)
 	opts.SetClientID(clientID)
 
+	// mqtt handlers
 	opts.SetOnConnectHandler(func(client mqtt.Client) {
 		log.Printf("connected to broker=%s", brokerURL)
 		token := client.Subscribe(topic, 1, subscriber(ctx, driver))
@@ -112,6 +136,7 @@ func main() {
 		log.Printf("connection lost: %v", err)
 	})
 
+	// mqtt connection
 	client := mqtt.NewClient(opts)
 	connectToken := client.Connect()
 	connectToken.Wait()
