@@ -27,6 +27,12 @@ func createProvider(name string) (sonar.Provider, error) {
 	switch name {
 	case "dummy":
 		return &sonar.DummyProvider{}, nil
+	case "periph":
+		provider, err := sonar.NewPeriphProvider()
+		if err != nil {
+			return nil, fmt.Errorf("failed to create sonar provider: %w", err)
+		}
+		return provider, nil
 	default:
 		return nil, fmt.Errorf("unsupported SONAR_PROVIDER=%q", name)
 	}
