@@ -85,6 +85,35 @@ To stop the broker:
 docker compose down
 ```
 
+### MQTT on Raspberry Pi devices
+
+If you want to run the broker directly on a Raspberry Pi (instead of Docker), install Mosquitto with `apt`:
+
+```bash
+sudo apt update
+sudo apt install -y mosquitto mosquitto-clients
+```
+
+Enable Mosquitto so it starts automatically at boot, then start it now:
+
+```bash
+sudo systemctl enable mosquitto
+sudo systemctl start mosquitto
+```
+
+You can verify the broker is running with:
+
+```bash
+sudo systemctl status mosquitto
+mosquitto_sub -h localhost -t '$SYS/#' -C 1
+```
+
+From other machines on the same network, point clients at the Pi's hostname or IP address:
+
+- `MQTT_BROKER=tcp://<pi-hostname-or-ip>:1883`
+
+> Note: default Mosquitto settings usually allow local-network access on port `1883`. If your Pi is firewalled, allow inbound TCP traffic on `1883`.
+
 ## Components
 
 Thanks to MQTT, components can be developed and tested independently. Each component is encapsulated as a Go command. Commands subscribe only to the messages that are relevant to them, and may publish messages that are handled by other components.
