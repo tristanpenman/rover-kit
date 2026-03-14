@@ -9,4 +9,5 @@ type Driver interface {
 	SpinCCW(ctx context.Context) error
 	Throttle(ctx context.Context, value float64) (bool, error)
 	Stop(ctx context.Context) error
+	Close(ctx context.Context) error
 }

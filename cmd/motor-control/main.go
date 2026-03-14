@@ -85,16 +85,20 @@ func subscriber(ctx context.Context, driver motor.Driver) func(_ mqtt.Client, ms
 	}
 }
 
-func createDriver(name string) (motor.Driver, func() error, error) {
+func createDriver(name string) (motor.Driver, error) {
 	switch name {
 	case "dummy":
-		return motor.DummyDriver{}, func() error { return nil }, nil
+		return motor.DummyDriver{}, nil
 	case "gobot":
-		return motor.GobotDriver{}, func() error { return nil }, nil
+		driver, err := motor.NewGobotDriver()
+		if err != nil {
+			return nil, fmt.Errorf("init gobot driver: %w", err)
+		}
+		return driver, nil
 	case "periph":
-		return motor.PeriphDriver{}, func() error { return nil }, nil
+		return motor.PeriphDriver{}, nil
 	default:
-		return nil, nil, fmt.Errorf("unsupported MOTOR_DRIVER=%q", name)
+		return nil, fmt.Errorf("unsupported MOTOR_DRIVER=%q", name)
 	}
 }
 
@@ -104,14 +108,14 @@ func main() {
 
 	// driver configuration
 	driverName := common.EnvOrDefault("MOTOR_DRIVER", defaultDriver)
-	driver, closeDriver, err := createDriver(driverName)
+	driver, err := createDriver(driverName)
 	if err != nil {
 		log.Fatalf("failed to resolve motor driver: %v", err)
 	}
 
 	// driver cleanup
 	defer func() {
-		if err := closeDriver(); err != nil {
+		if err := driver.Close(ctx); err != nil {
 			log.Printf("failed to close motor driver: %v", err)
 		}
 	}()

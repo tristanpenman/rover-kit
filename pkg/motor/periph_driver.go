@@ -29,3 +29,7 @@ func (PeriphDriver) Stop(context.Context) error {
 func (PeriphDriver) Throttle(_ context.Context, value float64) (bool, error) {
 	return false, nil
 }
+
+func (PeriphDriver) Close() error {
+	return nil
+}

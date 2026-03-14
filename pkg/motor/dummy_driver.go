@@ -37,3 +37,7 @@ func (DummyDriver) Throttle(_ context.Context, value float64) (bool, error) {
 	log.Printf("motor: throttle value=%0.2f active=%v", value, active)
 	return active, nil
 }
+
+func (DummyDriver) Close(context.Context) error {
+	return nil
+}
