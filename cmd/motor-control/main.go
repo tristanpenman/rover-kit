@@ -89,6 +89,10 @@ func createDriver(name string) (motor.Driver, func() error, error) {
 	switch name {
 	case "dummy":
 		return motor.DummyDriver{}, func() error { return nil }, nil
+	case "gobot":
+		return motor.GobotDriver{}, func() error { return nil }, nil
+	case "periph":
+		return motor.PeriphDriver{}, func() error { return nil }, nil
 	default:
 		return nil, nil, fmt.Errorf("unsupported MOTOR_DRIVER=%q", name)
 	}
