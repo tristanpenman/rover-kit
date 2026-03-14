@@ -1,9 +1,11 @@
 # Plan
 
 * Refactoring
-  * Port existing Python code to Go (**in progress**)
-  * Modularise motor control and sonar decoder
-  * Dockerfile or build scripts for ARMv6
+  * ~~Port web bridge code to Go~~
+  * ~~Dockerfile or build scripts for ARMv6~~
+  * ~~Implement motor driver using Gobot~~
+  * Implement motor driver using periph library (**in progress**)
+  * Modularise sonar reader
 
 * Tests
   * Test harness for motor and sonar modules

@@ -96,7 +96,11 @@ func createDriver(name string) (motor.Driver, error) {
 		}
 		return driver, nil
 	case "periph":
-		return motor.PeriphDriver{}, nil
+		driver, err := motor.NewPeriphDriver()
+		if err != nil {
+			return nil, fmt.Errorf("init periph driver: %w", err)
+		}
+		return driver, nil
 	default:
 		return nil, fmt.Errorf("unsupported MOTOR_DRIVER=%q", name)
 	}
