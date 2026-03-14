@@ -58,7 +58,15 @@ func (s *wsServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("websocket upgrade error: %v", err)
 		return
 	}
-	defer conn.Close()
+
+	// websocket cleanup
+	defer func(conn *websocket.Conn) {
+		err := conn.Close()
+		if err != nil {
+			log.Printf("close websocket error: %v", err)
+		}
+	}(conn)
+	
 	s.addClient(conn)
 	defer s.removeClient(conn)
 

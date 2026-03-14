@@ -1,4 +1,7 @@
-package provider
+package sonar
 
-type SonarProvider interface {
+import "context"
+
+type Provider interface {
+	Close(ctx context.Context) error
 }

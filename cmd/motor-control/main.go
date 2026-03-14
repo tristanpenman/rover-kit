@@ -14,7 +14,7 @@ import (
 	"rover-kit/pkg/common"
 	"rover-kit/pkg/motor"
 
-	// external
+	// third-party
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -88,7 +88,7 @@ func subscriber(ctx context.Context, driver motor.Driver) func(_ mqtt.Client, ms
 func createDriver(name string) (motor.Driver, error) {
 	switch name {
 	case "dummy":
-		return motor.DummyDriver{}, nil
+		return &motor.DummyDriver{}, nil
 	case "gobot":
 		driver, err := motor.NewGobotDriver()
 		if err != nil {
@@ -143,7 +143,6 @@ func main() {
 		}
 		log.Printf("subscribed topic=%s", topic)
 	})
-
 	opts.SetConnectionLostHandler(func(_ mqtt.Client, err error) {
 		log.Printf("connection lost: %v", err)
 	})

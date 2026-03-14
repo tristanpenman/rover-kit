@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	defaultThreshold   = 0.5
-	defaultMotorHatI2C = 0x60
+	defaultGobotThreshold   = 0.5
+	defaultGobotMotorHatI2C = 0x60
 )
 
 type GobotDriver struct {
@@ -23,7 +23,7 @@ type GobotDriver struct {
 }
 
 func NewGobotDriver() (*GobotDriver, error) {
-	return NewGobotDriverWithThreshold(defaultThreshold)
+	return NewGobotDriverWithThreshold(defaultGobotThreshold)
 }
 
 func NewGobotDriverWithThreshold(threshold float64) (*GobotDriver, error) {
@@ -35,11 +35,11 @@ func NewGobotDriverWithThreshold(threshold float64) (*GobotDriver, error) {
 	hat := i2c.NewAdafruitMotorHatDriver(
 		adaptor,
 		i2c.WithBus(1),
-		i2c.WithAddress(defaultMotorHatI2C),
+		i2c.WithAddress(defaultGobotMotorHatI2C),
 	)
 	if err := hat.Start(); err != nil {
 		_ = adaptor.Finalize()
-		return nil, fmt.Errorf("start adafruit motor hat driver: %w", err)
+		return nil, fmt.Errorf("start Adafruit motor hat driver: %w", err)
 	}
 
 	driver := &GobotDriver{
@@ -167,7 +167,7 @@ func (d *GobotDriver) Close(context.Context) error {
 	defer d.mu.Unlock()
 
 	if err := d.hat.Halt(); err != nil {
-		return fmt.Errorf("halt adafruit motor hat driver: %w", err)
+		return fmt.Errorf("halt Adafruit motor hat driver: %w", err)
 	}
 	if err := d.adaptor.Finalize(); err != nil {
 		return fmt.Errorf("finalize raspi adaptor: %w", err)
