@@ -12,7 +12,7 @@ import (
 
 	// internal
 	"rover-kit/pkg/common"
-	driver "rover-kit/pkg/motor"
+	"rover-kit/pkg/motor"
 
 	// external
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -27,7 +27,7 @@ type commandEnvelope struct {
 	Type common.CommandType `json:"type"`
 }
 
-func handleMotorCommand(ctx context.Context, motorDriver driver.Driver, payload []byte) error {
+func handleMotorCommand(ctx context.Context, driver motor.Driver, payload []byte) error {
 	var envelope commandEnvelope
 	if err := json.Unmarshal(payload, &envelope); err != nil {
 		return fmt.Errorf("decode command envelope: %w", err)
@@ -39,44 +39,44 @@ func handleMotorCommand(ctx context.Context, motorDriver driver.Driver, payload 
 		if err := json.Unmarshal(payload, &cmd); err != nil {
 			return fmt.Errorf("decode forwards command: %w", err)
 		}
-		return motorDriver.Forwards(ctx)
+		return driver.Forwards(ctx)
 	case common.CommandBackwards:
 		var cmd common.BackwardsCommand
 		if err := json.Unmarshal(payload, &cmd); err != nil {
 			return fmt.Errorf("decode backwards command: %w", err)
 		}
-		return motorDriver.Backwards(ctx)
+		return driver.Backwards(ctx)
 	case common.CommandSpinCW:
 		var cmd common.SpinCWCommand
 		if err := json.Unmarshal(payload, &cmd); err != nil {
 			return fmt.Errorf("decode spin_cw command: %w", err)
 		}
-		return motorDriver.SpinCW(ctx)
+		return driver.SpinCW(ctx)
 	case common.CommandSpinCCW:
 		var cmd common.SpinCCWCommand
 		if err := json.Unmarshal(payload, &cmd); err != nil {
 			return fmt.Errorf("decode spin_ccw command: %w", err)
 		}
-		return motorDriver.SpinCCW(ctx)
+		return driver.SpinCCW(ctx)
 	case common.CommandStop:
 		var cmd common.StopCommand
 		if err := json.Unmarshal(payload, &cmd); err != nil {
 			return fmt.Errorf("decode stop command: %w", err)
 		}
-		return motorDriver.Stop(ctx)
+		return driver.Stop(ctx)
 	case common.CommandThrottle:
 		var cmd common.ThrottleCommand
 		if err := json.Unmarshal(payload, &cmd); err != nil {
 			return fmt.Errorf("decode throttle command: %w", err)
 		}
-		_, err := motorDriver.Throttle(ctx, cmd.Value)
+		_, err := driver.Throttle(ctx, cmd.Value)
 		return err
 	default:
 		return fmt.Errorf("unsupported command type=%q", envelope.Type)
 	}
 }
 
-func subscriber(ctx context.Context, driver driver.DummyDriver) func(_ mqtt.Client, msg mqtt.Message) {
+func subscriber(ctx context.Context, driver motor.Driver) func(_ mqtt.Client, msg mqtt.Message) {
 	return func(_ mqtt.Client, msg mqtt.Message) {
 		if err := handleMotorCommand(ctx, driver, msg.Payload()); err != nil {
 			log.Printf("failed to handle command topic=%s payload=%q err=%v", msg.Topic(), msg.Payload(), err)
@@ -88,7 +88,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	dummyDriver := driver.DummyDriver{}
+	driver := motor.DummyDriver{}
 	brokerURL := common.EnvOrDefault("MQTT_BROKER", defaultBrokerURL)
 	topic := common.EnvOrDefault("MQTT_TOPIC", defaultTopic)
 	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("motor-control-%d", time.Now().UnixNano()))
@@ -99,7 +99,7 @@ func main() {
 
 	opts.SetOnConnectHandler(func(client mqtt.Client) {
 		log.Printf("connected to broker=%s", brokerURL)
-		token := client.Subscribe(topic, 1, subscriber(ctx, dummyDriver))
+		token := client.Subscribe(topic, 1, subscriber(ctx, driver))
 		token.Wait()
 		if err := token.Error(); err != nil {
 			log.Printf("failed to subscribe topic=%s err=%v", topic, err)
