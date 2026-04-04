@@ -47,7 +47,11 @@ Other photos can be found [here](./photos).
 
 My original Python implementation can be found in the [python](./python) directory.
 
-The project has since been migrated to Go, with MQTT for message passing. The rest of this file explains how to get up and running.
+The project has since been migrated to Go, with MQTT for message passing.
+
+Each component is encapsulated as a Go command. Communication between components is handled by MQTT. Commands subscribe only to the messages that are relevant to them, and may publish messages that are handled by other components.
+
+The rest of this file explains how to get up and running.
 
 ## Layout
 
@@ -65,15 +69,13 @@ Shared packages include:
 
 ## MQTT
 
-Communication between components is handled by MQTT.
-
 This section describes how to start a message broker and connect to it via the three commands listed above.
 
 ### Local MQTT broker
 
-The easiest way to get started is to use the [Mosquitto](https://mosquitto.org/) message broker. Mosquitto is a popular and light-weight message broker that implements the MQTT protocol.
+For development on a PC, you will need to install the [Mosquitto](https://mosquitto.org/) message broker. Mosquitto is a popular and light-weight message broker that implements the MQTT protocol.
 
-To start the local MQTT broker you'll need to use [Docker Compose](https://docs.docker.com/compose/):
+To start the local MQTT broker on PC you can use [Docker Compose](https://docs.docker.com/compose/):
 
 ```bash
 docker compose up -d mqtt
@@ -87,7 +89,7 @@ docker compose down
 
 ### MQTT on Raspberry Pi devices
 
-If you want to run the broker directly on a Raspberry Pi (instead of Docker), install Mosquitto with `apt`:
+To run the broker directly on a Raspberry Pi, install Mosquitto with `apt`:
 
 ```bash
 sudo apt update
@@ -108,17 +110,31 @@ sudo systemctl status mosquitto
 mosquitto_sub -h localhost -t '$SYS/#' -C 1
 ```
 
-From other machines on the same network, point clients at the Pi's hostname or IP address:
+To connect to Mosquito running on your local network, you can set an environment variable to override the connection URL:
 
 - `MQTT_BROKER=tcp://<pi-hostname-or-ip>:1883`
 
 > Note: default Mosquitto settings usually allow local-network access on port `1883`. If your Pi is firewalled, allow inbound TCP traffic on `1883`.
 
-## Components
+## Raspberry Pi Setup
 
-Thanks to MQTT, components can be developed and tested independently. Each component is encapsulated as a Go command. Commands subscribe only to the messages that are relevant to them, and may publish messages that are handled by other components.
+There are some other things you'll need to do on a Raspberry Pi...
 
-### Motor Control
+### Enable I2C
+
+Enable I2C at the system level:
+
+```bash
+sudo raspi-config nonint do_i2c 0
+```
+
+Not strictly necessary, but useful for debugging:
+
+```bash
+sudo apt install -y python3-pip python3-venv i2c-tools
+```
+
+## Motor Control
 
 As an example, the `motor-control` command subscribes to `rover/motor/command` messages. Running the command will connect to MQTT using default configuration:
 
@@ -154,6 +170,27 @@ Alternatively, you can run `mosquitto_pub` commands from within the `mqtt` Docke
 ```bash
 docker compose exec mqtt mosquitto_pub -t rover/motor/command -m '{"type":"throttle","value":0.75}'
 ```
+
+## Web Bridge
+
+```
+go run ./cmd/web-bridge
+```
+
+## Cross-Compilation
+
+A Makefile has been included to cross-compile Go binaries to run on the Raspberry Pi.
+
+Simply run `make`:
+
+```
+% make
+env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags "-w" -o bin/motor-control cmd/motor-control/main.go
+env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags "-w" -o bin/sonar-reader cmd/sonar-reader/main.go
+env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags "-w" -o bin/web-bridge cmd/web-bridge/main.go
+```
+
+The executables in `/bin` can then be copied over to the Pi via `ssh`.
 
 ## Tests
 
