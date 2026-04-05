@@ -10,16 +10,27 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
-	"github.com/gorilla/websocket"
-
+	// internal
 	"rover-kit/pkg/common"
+
+	// third-party
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gorilla/websocket"
+)
+
+const (
+	defaultBrokerURL     = "tcp://localhost:1883"
+	defaultMotorCmdTopic = "rover/motor/cmd"
 )
 
 type wsServer struct {
-	upgrader websocket.Upgrader
-	clients  map[*websocket.Conn]struct{}
-	mu       sync.Mutex
+	clients       map[*websocket.Conn]struct{}
+	motorCmdTopic string
+	mqttClient    mqtt.Client
+	mu            sync.Mutex
+	upgrader      websocket.Upgrader
 }
 
 type commandEnvelope struct {
@@ -31,12 +42,14 @@ type throttleResponse struct {
 	Active bool               `json:"active"`
 }
 
-func newWSServer() *wsServer {
+func newWSServer(mqttClient mqtt.Client, motorCmdTopic string) *wsServer {
 	return &wsServer{
+		clients:       make(map[*websocket.Conn]struct{}),
+		mqttClient:    mqttClient,
+		motorCmdTopic: motorCmdTopic,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(_ *http.Request) bool { return true },
 		},
-		clients: make(map[*websocket.Conn]struct{}),
 	}
 }
 
@@ -66,7 +79,7 @@ func (s *wsServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("close websocket error: %v", err)
 		}
 	}(conn)
-	
+
 	s.addClient(conn)
 	defer s.removeClient(conn)
 
@@ -79,7 +92,7 @@ func (s *wsServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		response, err := parseCommand(message)
+		_, err = parseCommand(message)
 		if err != nil {
 			if writeErr := conn.WriteMessage(websocket.TextMessage, []byte(err.Error())); writeErr != nil {
 				log.Printf("websocket write error: %v", writeErr)
@@ -88,7 +101,10 @@ func (s *wsServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if writeErr := conn.WriteJSON(response); writeErr != nil {
+		log.Printf("forwarding message: %v", message)
+		s.mqttClient.Publish(defaultMotorCmdTopic, 0, false, message)
+
+		if writeErr := conn.WriteJSON(message); writeErr != nil {
 			log.Printf("websocket write json error: %v", writeErr)
 			return
 		}
@@ -142,13 +158,40 @@ func main() {
 	staticDir := flag.String("static-dir", "web", "path to static web assets")
 	flag.Parse()
 
-	server := newWSServer()
-	mux := http.NewServeMux()
+	// mqtt configuration
+	brokerURL := common.EnvOrDefault("MQTT_BROKER", defaultBrokerURL)
+	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("motor-control-%d", time.Now().UnixNano()))
+	motorCmdTopic := common.EnvOrDefault("MQTT_MOTOR_CMD_TOPIC", defaultMotorCmdTopic)
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(brokerURL)
+	opts.SetClientID(clientID)
 
+	// mqtt handlers
+	opts.SetOnConnectHandler(func(client mqtt.Client) {
+		log.Printf("connected to broker=%s", brokerURL)
+	})
+	opts.SetConnectionLostHandler(func(_ mqtt.Client, err error) {
+		log.Printf("connection lost: %v", err)
+	})
+
+	// mqtt connection
+	client := mqtt.NewClient(opts)
+	connectToken := client.Connect()
+	connectToken.Wait()
+	if err := connectToken.Error(); err != nil {
+		log.Fatalf("failed to connect to broker=%s err=%v", brokerURL, err)
+	}
+
+	defer client.Disconnect(250)
+
+	// setup web server
 	webRoot := staticDirPath(*staticDir)
+	server := newWSServer(client, motorCmdTopic)
+	mux := http.NewServeMux()
 	mux.Handle("/ws", http.HandlerFunc(server.websocketHandler))
 	mux.Handle("/", http.FileServer(http.Dir(webRoot)))
 
+	// start listening
 	address := fmt.Sprintf("%s:%d", *host, *port)
 	log.Printf("starting web bridge on http://%s using static dir %s", address, webRoot)
 	if err := http.ListenAndServe(address, mux); err != nil {

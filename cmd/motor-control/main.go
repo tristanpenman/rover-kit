@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	defaultBrokerURL = "tcp://localhost:1883"
-	defaultDriver    = "dummy"
-	defaultTopic     = "rover/motor/command"
+	defaultBrokerURL     = "tcp://localhost:1883"
+	defaultDriver        = "dummy"
+	defaultMotorCmdTopic = "rover/motor/cmd"
 )
 
 type commandEnvelope struct {
@@ -79,6 +79,7 @@ func handleMotorCommand(ctx context.Context, driver motor.Driver, payload []byte
 
 func subscriber(ctx context.Context, driver motor.Driver) func(_ mqtt.Client, msg mqtt.Message) {
 	return func(_ mqtt.Client, msg mqtt.Message) {
+		log.Printf("received command topic=%s payload=%s", msg.Topic(), msg.Payload())
 		if err := handleMotorCommand(ctx, driver, msg.Payload()); err != nil {
 			log.Printf("failed to handle command topic=%s payload=%q err=%v", msg.Topic(), msg.Payload(), err)
 		}
@@ -127,7 +128,7 @@ func main() {
 	// mqtt configuration
 	brokerURL := common.EnvOrDefault("MQTT_BROKER", defaultBrokerURL)
 	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("motor-control-%d", time.Now().UnixNano()))
-	topic := common.EnvOrDefault("MQTT_TOPIC", defaultTopic)
+	motorCmdTopic := common.EnvOrDefault("MQTT_TOPIC", defaultMotorCmdTopic)
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerURL)
 	opts.SetClientID(clientID)
@@ -135,13 +136,13 @@ func main() {
 	// mqtt handlers
 	opts.SetOnConnectHandler(func(client mqtt.Client) {
 		log.Printf("connected to broker=%s", brokerURL)
-		token := client.Subscribe(topic, 1, subscriber(ctx, driver))
+		token := client.Subscribe(motorCmdTopic, 1, subscriber(ctx, driver))
 		token.Wait()
 		if err := token.Error(); err != nil {
-			log.Printf("failed to subscribe topic=%s err=%v", topic, err)
+			log.Printf("failed to subscribe topic=%s err=%v", motorCmdTopic, err)
 			return
 		}
-		log.Printf("subscribed topic=%s", topic)
+		log.Printf("subscribed topic=%s", motorCmdTopic)
 	})
 	opts.SetConnectionLostHandler(func(_ mqtt.Client, err error) {
 		log.Printf("connection lost: %v", err)
