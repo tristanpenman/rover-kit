@@ -6,7 +6,7 @@ FLAGS=-ldflags "-w"
 
 ENV=env GOOS=linux GOARCH=$(GOARCH) GOARM=$(GOARM)
 
-.PHONY: all clean motor-control sonar-reader web-bridge
+.PHONY: all clean motor-control sonar-reader test web-bridge
 
 all: motor-control sonar-reader web-bridge
 
@@ -20,6 +20,9 @@ web-bridge:
 	$(ENV) go build $(FLAGS) -o $(DEST)/web-bridge cmd/web-bridge/main.go
 	@rm -rf $(DEST)/web
 	cp -R cmd/web-bridge/web $(DEST)/web
+
+test:
+	go test ./...
 
 clean:
 	rm -rf ${DEST}/{motor-control,sonar-reader,web-bridge,web}
