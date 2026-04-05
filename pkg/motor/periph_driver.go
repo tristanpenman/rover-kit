@@ -36,6 +36,7 @@ type PeriphDriver struct {
 const (
 	defaultPeriphThreshold   = 0.5
 	defaultPeriphMotorHatI2C = 0x60
+	periphPWMMax             = 4095
 )
 
 func NewPeriphDriver() (*PeriphDriver, error) {
@@ -78,6 +79,11 @@ func (d *PeriphDriver) setChannel(channel int, on bool) error {
 	return d.pca.SetFullOff(channel)
 }
 
+func pwmDutyFromThrottle(throttle float64) gpio.Duty {
+	t := math.Max(-1, math.Min(1, throttle))
+	return gpio.Duty(math.Round(math.Abs(t) * periphPWMMax))
+}
+
 func (d *PeriphDriver) setMotor(motor int, throttle float64) error {
 	if motor < 1 || motor > len(periphMotorChannels) {
 		return fmt.Errorf("unsupported motor index %d", motor)
@@ -85,7 +91,7 @@ func (d *PeriphDriver) setMotor(motor int, throttle float64) error {
 	ch := periphMotorChannels[motor-1]
 
 	t := math.Max(-1, math.Min(1, throttle))
-	duty := gpio.Duty(math.Round(math.Abs(t) * float64(gpio.DutyMax)))
+	duty := pwmDutyFromThrottle(t)
 
 	switch {
 	case t > 0:
