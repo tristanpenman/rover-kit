@@ -76,7 +76,7 @@ addButton('Backwards', 'backwards');
 addButton('Spin Clockwise', 'spin_cw');
 addButton('Spin Counter-clockwise', 'spin_ccw');
 
-for (i = 0; i < maxMessages; i++) {
+for (let i = 0; i < maxMessages; i++) {
   addMessage('');
 }
 
@@ -85,7 +85,7 @@ const gamepadInput = (gamepadIndex) => {
   const gamepad = gamepads[gamepadIndex];
   if (gamepad && gamepad.connected) {
     const newThrottle =  -gamepad.axes[1];
-    if (newThrottle != throttle) {
+    if (newThrottle !== throttle) {
       throttle = newThrottle;
       ws.send(JSON.stringify({
         type: 'throttle',

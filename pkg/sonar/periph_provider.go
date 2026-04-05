@@ -2,7 +2,6 @@ package sonar
 
 import (
 	"context"
-	"time"
 
 	// third-party
 	"periph.io/x/conn/v3/gpio"
@@ -10,9 +9,9 @@ import (
 )
 
 type PeriphProvider struct {
-	trig    gpio.PinOut
-	echo    gpio.PinIn
-	timeout time.Duration
+	trig gpio.PinOut
+	echo gpio.PinIn
+	// timeout time.Duration
 }
 
 func NewPeriphProvider() (*PeriphProvider, error) {
