@@ -4,8 +4,9 @@
   * ~~Port web bridge code to Go~~
   * ~~Dockerfile or build scripts for ARMv6~~
   * ~~Implement motor driver using Gobot~~
-  * Implement motor driver using periph library (**in progress**)
-  * Modularise sonar reader
+  * ~~Implement motor driver using periph library~~
+  * Modularise sonar reader (**in progress**)
+  * Implement periph provider for sonar
 
 * Tests
   * Test harness for motor and sonar modules
@@ -16,6 +17,7 @@
 * Microcontroller
   * Basic structure for STM32 firmware
   * Explore using TinyGo or Embedded Go
+  * Define UART protocol for sonar readings
   * Full STM32 based sonar receiver
 
 * Future
