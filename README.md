@@ -136,7 +136,7 @@ sudo apt install -y python3-pip python3-venv i2c-tools
 
 ## Motor Control
 
-As an example, the `motor-control` command subscribes to `rover/motor/command` messages. Running the command will connect to MQTT using default configuration:
+As an example, the `motor-control` command subscribes to `rover/motor/cmd` messages. Running the command will connect to MQTT using default configuration:
 
 ```bash
 go run ./cmd/motor-control
@@ -145,18 +145,22 @@ go run ./cmd/motor-control
 MQTT configuration can be customised via environment variables:
 
 - `MQTT_BROKER` (default `tcp://localhost:1883`)
-- `MQTT_TOPIC` (default `rover/motor/command`)
+- `MQTT_TOPIC` (default `rover/motor/cmd`)
 - `MQTT_CLIENT_ID` (default is auto-generated)
+
+You can also introduce a motor command "cooldown period". This will add a delay between subsequent motor commands, which can be useful for debugging Motor HAT issues:
+
+- `MOTOR_COMMAND_COOLDOWN_MS` (default `0`; set to a positive value to force a minimum delay between motor commands)
 
 ### Injecting Commands
 
 If you have `mosquitto_pub` installed locally:
 
 ```bash
-mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"forwards"}'
-mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"spin_ccw"}'
-mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"throttle","value":0.75}'
-mosquitto_pub -h localhost -p 1883 -t rover/motor/command -m '{"type":"stop"}'
+mosquitto_pub -h localhost -p 1883 -t rover/motor/cmd -m '{"type":"forwards"}'
+mosquitto_pub -h localhost -p 1883 -t rover/motor/cmd -m '{"type":"spin_ccw"}'
+mosquitto_pub -h localhost -p 1883 -t rover/motor/cmd -m '{"type":"throttle","value":0.75}'
+mosquitto_pub -h localhost -p 1883 -t rover/motor/cmd -m '{"type":"stop"}'
 ```
 
 To use `mosquitto_pub` on macOS, install `mosquitto` from Homebrew:
@@ -168,7 +172,7 @@ brew install mosquitto
 Alternatively, you can run `mosquitto_pub` commands from within the `mqtt` Docker container created above:
 
 ```bash
-docker compose exec mqtt mosquitto_pub -t rover/motor/command -m '{"type":"throttle","value":0.75}'
+docker compose exec mqtt mosquitto_pub -t rover/motor/cmd -m '{"type":"throttle","value":0.75}'
 ```
 
 ## Web Bridge

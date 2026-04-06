@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -22,10 +24,37 @@ const (
 	defaultBrokerURL     = "tcp://localhost:1883"
 	defaultDriver        = "dummy"
 	defaultMotorCmdTopic = "rover/motor/cmd"
+	defaultCooldownMS    = 0
 )
 
 type commandEnvelope struct {
 	Type common.CommandType `json:"type"`
+}
+
+type commandGate struct {
+	mu          sync.Mutex
+	lastRun     time.Time
+	minInterval time.Duration
+}
+
+func newCommandGate(minInterval time.Duration) *commandGate {
+	return &commandGate{minInterval: minInterval}
+}
+
+func (g *commandGate) Run(run func() error) error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	if g.minInterval > 0 && !g.lastRun.IsZero() {
+		elapsed := time.Since(g.lastRun)
+		if elapsed < g.minInterval {
+			time.Sleep(g.minInterval - elapsed)
+		}
+	}
+
+	err := run()
+	g.lastRun = time.Now()
+	return err
 }
 
 func handleMotorCommand(ctx context.Context, driver motor.Driver, payload []byte) error {
@@ -77,10 +106,13 @@ func handleMotorCommand(ctx context.Context, driver motor.Driver, payload []byte
 	}
 }
 
-func subscriber(ctx context.Context, driver motor.Driver) func(_ mqtt.Client, msg mqtt.Message) {
+func subscriber(ctx context.Context, driver motor.Driver, gate *commandGate) func(_ mqtt.Client, msg mqtt.Message) {
 	return func(_ mqtt.Client, msg mqtt.Message) {
 		log.Printf("received command topic=%s payload=%s", msg.Topic(), msg.Payload())
-		if err := handleMotorCommand(ctx, driver, msg.Payload()); err != nil {
+		err := gate.Run(func() error {
+			return handleMotorCommand(ctx, driver, msg.Payload())
+		})
+		if err != nil {
 			log.Printf("failed to handle command topic=%s payload=%q err=%v", msg.Topic(), msg.Payload(), err)
 		}
 	}
@@ -129,6 +161,13 @@ func main() {
 	brokerURL := common.EnvOrDefault("MQTT_BROKER", defaultBrokerURL)
 	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("motor-control-%d", time.Now().UnixNano()))
 	motorCmdTopic := common.EnvOrDefault("MQTT_TOPIC", defaultMotorCmdTopic)
+	cooldownRaw := common.EnvOrDefault("MOTOR_COMMAND_COOLDOWN_MS", fmt.Sprintf("%d", defaultCooldownMS))
+	cooldownMS, err := strconv.Atoi(cooldownRaw)
+	if err != nil || cooldownMS < 0 {
+		log.Fatalf("invalid MOTOR_COMMAND_COOLDOWN_MS=%q", cooldownRaw)
+	}
+	commandCooldown := time.Duration(cooldownMS) * time.Millisecond
+	gate := newCommandGate(commandCooldown)
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerURL)
 	opts.SetClientID(clientID)
@@ -136,7 +175,7 @@ func main() {
 	// mqtt handlers
 	opts.SetOnConnectHandler(func(client mqtt.Client) {
 		log.Printf("connected to broker=%s", brokerURL)
-		token := client.Subscribe(motorCmdTopic, 1, subscriber(ctx, driver))
+		token := client.Subscribe(motorCmdTopic, 1, subscriber(ctx, driver, gate))
 		token.Wait()
 		if err := token.Error(); err != nil {
 			log.Printf("failed to subscribe topic=%s err=%v", motorCmdTopic, err)
