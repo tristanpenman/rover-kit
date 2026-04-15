@@ -1,20 +1,23 @@
 DEST?=bin
 GOARCH?=arm
 GOARM?=6
-
+TARGET?=stm32f4disco
 FLAGS=-ldflags "-w"
 
 ENV=env GOOS=linux GOARCH=$(GOARCH) GOARM=$(GOARM)
 
-.PHONY: all clean motor-control sonar-reader test web-bridge
+.PHONY: all clean motor-control sonar-reader test tinygo-sonar web-bridge
 
-all: motor-control sonar-reader web-bridge
+all: motor-control sonar-reader tinygo-sonar web-bridge
 
 motor-control:
 	$(ENV) go build $(FLAGS) -o $(DEST)/motor-control cmd/motor-control/main.go
 
 sonar-reader:
 	$(ENV) go build $(FLAGS) -o $(DEST)/sonar-reader cmd/sonar-reader/main.go
+
+tinygo-sonar:
+	tinygo build -target=$(TARGET) -o $(DEST)/sonar-$(TARGET).elf ./firmware/sonar-stm32
 
 web-bridge:
 	$(ENV) go build $(FLAGS) -o $(DEST)/web-bridge cmd/web-bridge/main.go
@@ -25,4 +28,4 @@ test:
 	go test ./...
 
 clean:
-	rm -rf ${DEST}/{motor-control,sonar-reader,web-bridge,web}
+	rm -rf ${DEST}/{motor-control,sonar-reader,sonar-*.elf,web-bridge,web}

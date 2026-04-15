@@ -211,13 +211,17 @@ Current automated coverage focuses on:
 
 ## STM32
 
-One of my goals for this project is to move sonar sampling to an STM32 microcontroller (instead of using Linux GPIO on the Pi).
+A key goal for this project is to move sonar sampling to an STM32 microcontroller instead of using GPIO on the Raspberry Pi. This should make sonar readings more accurate thanks to the realtime timing of the MCU.
 
-This will involve:
+### TinyGo Sonar
 
-- Porting HC-SR04 trigger/echo timing loops to TinyGo GPIO.
-- Implementing a text-based JSON command/event protocol over USB CDC.
-- A split architecture where STM32 does real-time sampling and a host bridge forwards events.
+TinyGo firmware scaffold now exists at `firmware/sonar-stm32` and uses UART to stream framed sonar samples to a host.
+
+Build firmware (requires `tinygo`):
+
+```bash
+make tinygo-sonar
+```
 
 ## License
 
