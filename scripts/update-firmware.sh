@@ -6,7 +6,7 @@ TARGET=${TARGET:-stm32f4disco}
 
 if command -v STM32_Programmer_CLI >/dev/null 2>&1; then
   echo "STM32_Programmer_CLI found in PATH."
-  CLI=STM32_Programmer_CLI
+  CLI=$(which STM32_Programmer_CLI)
 else
   echo "STM32_Programmer_CLI not found in PATH. Checking common install locations..."
 
@@ -35,4 +35,4 @@ if [[ -z "$CLI" || ! -x "$CLI" ]]; then
   exit 1
 fi
 
-${CLI} -c port=SWD -w bin/sonar-${TARGET}.elf 0x08000000
+sudo ${CLI} -c port=SWD -w bin/sonar-${TARGET}.elf
