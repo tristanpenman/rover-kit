@@ -215,12 +215,22 @@ A key goal for this project is to move sonar sampling to an STM32 microcontrolle
 
 ### TinyGo Sonar
 
-TinyGo firmware scaffold now exists at `firmware/sonar-stm32` and uses UART to stream framed sonar samples to a host.
+TinyGo firmware scaffold now exists at `firmware/sonar` and uses UART to stream framed sonar samples to a host.
 
 Build firmware (requires `tinygo`):
 
 ```bash
 make tinygo-sonar
+```
+
+### TinyGo Hello World (UART)
+
+A second firmware example is available at `firmware/hello`. It writes `Hello, World from STM32 over UART!` once per second at `115200` baud and echoes incoming bytes from the host. This is useful for debugging.
+
+Build firmware (requires `tinygo`):
+
+```bash
+make tinygo-hello
 ```
 
 ## License

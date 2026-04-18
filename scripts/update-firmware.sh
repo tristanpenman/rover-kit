@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
+VARIATION=${1:-sonar}
 TARGET=${TARGET:-stm32f4disco}
 
 if command -v STM32_Programmer_CLI >/dev/null 2>&1; then
@@ -35,4 +35,4 @@ if [[ -z "$CLI" || ! -x "$CLI" ]]; then
   exit 1
 fi
 
-sudo ${CLI} -c port=SWD -w bin/sonar-${TARGET}.elf
+sudo ${CLI} -c port=SWD -w bin/${VARIATION}-${TARGET}.bin 0x08000000
