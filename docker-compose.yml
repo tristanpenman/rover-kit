@@ -4,3 +4,9 @@ services:
       context: ./mqtt
     ports:
       - "1883:1883"
+  tinygo:
+    build:
+      context: ./tinygo
+    volumes:
+      - .:/app
+    working_dir: /app
