@@ -1,12 +1,41 @@
+x-cmd: &cmd
+  build: .
+  image: cmd:latest
+  environment:
+    - MQTT_BROKER=tcp://mqtt:1883
+  volumes:
+    - .:/app
+  depends_on:
+    - mqtt
+  profiles:
+    - demo
+
 services:
+  cmd-motor-control:
+    <<: *cmd
+    command: ["go", "run", "cmd/motor-control/main.go"]
+
+  cmd-sonar-reader:
+    <<: *cmd
+    command: ["go", "run", "cmd/sonar-reader/main.go"]
+
+  cmd-web-bridge:
+    <<: *cmd
+    command: ["go", "run", "cmd/web-bridge/main.go"]
+
   mqtt:
     build:
       context: ./mqtt
     ports:
       - "1883:1883"
+    profiles:
+      - demo
+
   tinygo:
     build:
       context: ./tinygo
+    profiles:
+      - build
     volumes:
       - .:/app
     working_dir: /app

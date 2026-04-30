@@ -116,6 +116,16 @@ To connect to Mosquito running on your local network, you can set an environment
 
 > Note: default Mosquitto settings usually allow local-network access on port `1883`. If your Pi is firewalled, allow inbound TCP traffic on `1883`.
 
+## Demo
+
+A demo Docker Compose environment can be started using:
+
+```bash
+./scripts/compose.sh
+```
+
+This environment includes MQTT, and will run each of the three commands documented above. Dummy motor drivers and sonar providers will be used. This can be used for quick demos and testing, but is otherwise not very useful.
+
 ## Raspberry Pi Setup
 
 There are some other things you'll need to do on a Raspberry Pi...
