@@ -4,169 +4,167 @@ Adventures in building a toy rover that can respond to commands over Wi-Fi and s
 
 ![Sensor mounted, not quite wired up...](./photos/05-sensors-mounted.jpeg)
 
-## Inspiration
+## Overview
 
-This project is inspired by a [blog post by Mat Kelcey](https://matpalm.com/blog/drivebot/) about building a rover and training it to move around autonomously.
+This project is inspired by [Mat Kelcey's Drivebot post](https://matpalm.com/blog/drivebot/), but focuses more hardware hacking and a Go + MQTT software stack.
 
-I've used the same basic parts, but taken the project in a different direction. My focus is primarily hardware hacking.
+Key characteristics:
 
-## Parts
+- Control and telemetry are split into three Go commands.
+- Components communicate over MQTT topics.
+- The codebase includes local GPIO implementations for motor control and sonar measurements.
 
-The rover is based on the following parts:
+Hardware:
 
-* [Whippersnapper Runt Rover](https://www.servocity.com/whippersnapper-runt-rover)
-* [Raspberry Pi Zero W](https://www.raspberrypi.com/products/raspberry-pi-zero-w)
-* [Adafruit DC & Stepper Motor HAT](https://www.adafruit.com/product/2348)
-* [HC-SR04 Ultrasonic Distance Sensor](https://www.sparkfun.com/products/15569) (x4)
+- [Whippersnapper Runt Rover](https://www.servocity.com/whippersnapper-runt-rover)
+- [Raspberry Pi Zero W](https://www.raspberrypi.com/products/raspberry-pi-zero-w)
+- [Adafruit DC & Stepper Motor HAT](https://www.adafruit.com/product/2348)
+- [HC-SR04 Ultrasonic Distance Sensor](https://www.sparkfun.com/products/15569) (x4)
 
-This is all wired up with an assortment of resistors, jumper wires, and breadboards.
+Power:
 
-Power to the Motor HAT is provided by a 12V battery pack. Power to the Raspberry Pi is provided by a portable USB power supply.
+- Motor HAT: 12V battery pack
+- Raspberry Pi: portable USB power supply
 
-### Prototype
+## Project Layout
 
-When I first started this project, I was using a regular Raspberry Pi 3 with components connected via a breadboard:
+### Commands
 
-![Early prototype](./photos/00-early-prototype.jpeg)
+- `cmd/motor-control` - Subscribes to typed motor commands and invokes a `MotorDriver`.
+- `cmd/sonar-reader` - Samples via `SonarProvider` and publishes distance events.
+- `cmd/web-bridge` - HTTP/WebSocket bridge into broker topics.
 
-I eventually switched to using a Raspberry Pi Zero W, so that power usage and space requirements would be reduced:
+### Shared packages
 
-![Switching to Raspberry Pi Zero W](./photos/01-switching-to-pi-zero.jpeg)
+- `pkg/common` - Message types and broker abstractions
+- `pkg/motor` - `MotorDriver` interface + GPIO implementation
+- `pkg/sonar` - `SonarProvider` interface + GPIO implementation
 
-Next, I eliminated the ugly breadboard by soldering my own sonar sensor interface. This was very slow because I'm new to soldering:
+## Running Locally
 
-![Half way through sensor interface board](./photos/03-half-way.jpeg)
+### MQTT broker (PC)
 
-Everything looked much neater with the new interface board. The next step was to figure out wiring:
-
-![Figuring out wiring after soldering was complete](./photos/04-figuring-out-wiring.jpeg)
-
-Other photos can be found [here](./photos).
-
-## Source
-
-My original Python implementation can be found in the [python](./python) directory.
-
-The project has since been migrated to Go, with MQTT for message passing.
-
-Each component is encapsulated as a Go command. Communication between components is handled by MQTT. Commands subscribe only to the messages that are relevant to them, and may publish messages that are handled by other components.
-
-The rest of this file explains how to get up and running.
-
-## Layout
-
-This consists of three commands:
-
-- `cmd/motor-control` - Subscribes to typed motor commands and invokes a `MotorDriver` implementation
-- `cmd/sonar-reader` - Consumes a `SonarProvider` implementation and publishes distance events
-- `cmd/web-bridge` - HTTP/WebSocket bridge from browser clients into broker topics
-
-Shared packages include:
-
-- `pkg/common` - Message types, strongly-typed command/event models, and broker abstractions
-- `pkg/motor` - Defines a `MotorDriver` interface and local implementation using GPIO
-- `pkg/sonar` - Defines a `SonarProvider` interface and local implementation using GPIO
-
-## MQTT
-
-This section describes how to start a message broker and connect to it via the three commands listed above.
-
-### Local MQTT broker
-
-For development on a PC, you will need to install the [Mosquitto](https://mosquitto.org/) message broker. Mosquitto is a popular and light-weight message broker that implements the MQTT protocol.
-
-To start the local MQTT broker on PC you can use [Docker Compose](https://docs.docker.com/compose/):
+Install and run [Mosquitto](https://mosquitto.org/) via Docker Compose:
 
 ```bash
 docker compose up -d mqtt
-```
-
-To stop the broker:
-
-```bash
 docker compose down
 ```
 
-### MQTT on Raspberry Pi devices
+### Demo stack
 
-To run the broker directly on a Raspberry Pi, install Mosquitto with `apt`:
+```bash
+./scripts/compose.sh
+```
+
+This starts MQTT plus all three commands with dummy drivers/providers for quick demos.
+
+## Raspberry Pi Setup
+
+### Install Mosquitto
 
 ```bash
 sudo apt update
 sudo apt install -y mosquitto mosquitto-clients
-```
-
-Enable Mosquitto so it starts automatically at boot, then start it now:
-
-```bash
 sudo systemctl enable mosquitto
 sudo systemctl start mosquitto
 ```
 
-You can verify the broker is running with:
+Verify:
 
 ```bash
 sudo systemctl status mosquitto
 mosquitto_sub -h localhost -t '$SYS/#' -C 1
 ```
 
-To connect to Mosquito running on your local network, you can set an environment variable to override the connection URL:
+If needed, Go commands allow you to set the broker URL explicitly:
 
 - `MQTT_BROKER=tcp://<pi-hostname-or-ip>:1883`
 
-> Note: default Mosquitto settings usually allow local-network access on port `1883`. If your Pi is firewalled, allow inbound TCP traffic on `1883`.
-
-## Demo
-
-A demo Docker Compose environment can be started using:
-
-```bash
-./scripts/compose.sh
-```
-
-This environment includes MQTT, and will run each of the three commands documented above. Dummy motor drivers and sonar providers will be used. This can be used for quick demos and testing, but is otherwise not very useful.
-
-Once started, the web bridge will be accessible at http://localhost:7200
-
-## Raspberry Pi Setup
-
-There are some other things you'll need to do on a Raspberry Pi...
-
 ### Enable I2C
 
-Enable I2C at the system level:
+Required for motor control:
 
 ```bash
 sudo raspi-config nonint do_i2c 0
-```
-
-Not strictly necessary, but useful for debugging:
-
-```bash
 sudo apt install -y python3-pip python3-venv i2c-tools
 ```
 
-## Motor Control
+### Build binaries
 
-As an example, the `motor-control` command subscribes to `rover/motor/cmd` messages. Running the command will connect to MQTT using default configuration:
+Build directly on the Pi:
+
+```bash
+go build -ldflags "-w" -o bin/motor-control ./cmd/motor-control
+go build -ldflags "-w" -o bin/sonar-reader ./cmd/sonar-reader
+go build -ldflags "-w" -o bin/web-bridge ./cmd/web-bridge
+```
+
+Or cross-compile from another machine:
+
+```bash
+make
+```
+
+The commands can be run manually, or orchestrated using `systemd`.
+
+## Systemd
+
+Service templates are provided under `deploy/systemd`:
+
+- `rover-motor-control.service`
+- `rover-sonar-reader.service`
+- `rover-web-bridge.service`
+- `rover-stack.target` (optional convenience target)
+
+### Installation
+
+This example assumes the repo is deployed at `/opt/rover-kit` and binaries are in `/opt/rover-kit/bin`.
+
+```bash
+sudo mkdir -p /opt/rover-kit/bin
+sudo cp bin/motor-control bin/sonar-reader bin/web-bridge /opt/rover-kit/bin/
+sudo cp deploy/systemd/*.service deploy/systemd/*.target /etc/systemd/system/
+```
+
+### Enable Services
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now mosquitto
+sudo systemctl enable --now rover-motor-control rover-sonar-reader rover-web-bridge
+```
+
+Optional single-target startup:
+
+```bash
+sudo systemctl enable --now rover-stack.target
+```
+
+### Monitoring
+
+```bash
+sudo systemctl status rover-motor-control rover-sonar-reader rover-web-bridge
+sudo journalctl -u rover-motor-control -u rover-sonar-reader -u rover-web-bridge -f
+```
+
+## Running Commands Manually
+
+### Motor control
 
 ```bash
 go run ./cmd/motor-control
 ```
 
-MQTT configuration can be customised via environment variables:
+Environment variables:
 
 - `MQTT_BROKER` (default `tcp://localhost:1883`)
 - `MQTT_TOPIC` (default `rover/motor/cmd`)
-- `MQTT_CLIENT_ID` (default is auto-generated)
+- `MQTT_CLIENT_ID` (default auto-generated)
+- `MOTOR_COMMAND_COOLDOWN_MS` (default `0`)
+- `MOTOR_DRIVER` (`dummy`, `gobot`, or `periph` - default to `dummy`)
 
-You can also introduce a motor command "cooldown period". This will add a delay between subsequent motor commands, which can be useful for debugging Motor HAT issues:
-
-- `MOTOR_COMMAND_COOLDOWN_MS` (default `0`; set to a positive value to force a minimum delay between motor commands)
-
-### Injecting Commands
-
-If you have `mosquitto_pub` installed locally:
+Test by injecting commands using `mosquitto_pub`:
 
 ```bash
 mosquitto_pub -h localhost -p 1883 -t rover/motor/cmd -m '{"type":"forwards"}'
@@ -175,75 +173,87 @@ mosquitto_pub -h localhost -p 1883 -t rover/motor/cmd -m '{"type":"throttle","va
 mosquitto_pub -h localhost -p 1883 -t rover/motor/cmd -m '{"type":"stop"}'
 ```
 
-To use `mosquitto_pub` on macOS, install `mosquitto` from Homebrew:
+### Sonar Reader
 
 ```bash
-brew install mosquitto
+go run ./cmd/sonar-reader
 ```
 
-Alternatively, you can run `mosquitto_pub` commands from within the `mqtt` Docker container created above:
+Environment variables:
+
+- `MQTT_BROKER` (default `tcp://localhost:1883`)
+- `MQTT_TOPIC` (default `rover/sonar/sample`)
+- `MQTT_CLIENT_ID` (default auto-generated)
+- `SONAR_PROVIDER` (`dummy`, `periph` or `uart` - default to `dummy`)
 
 ```bash
-docker compose exec mqtt mosquitto_pub -t rover/motor/cmd -m '{"type":"throttle","value":0.75}'
+mosquitto_pub -h localhost -p 1883 -t rover/sonar/sample
 ```
 
-## Web Bridge
+Note: The `uart` sonar provider is still in development.
 
-```
+### Web Bridge
+
+```bash
 go run ./cmd/web-bridge
 ```
 
-## Cross-Compilation
+Starts a local web server on port 7200.
 
-A Makefile has been included to cross-compile Go binaries to run on the Raspberry Pi.
+## Firmware
 
-Simply run `make`:
+Provides firmware for STM32 microcontrollers to collect ultrasonic distance readings via UART.
 
-```
-% make
-env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags "-w" -o bin/motor-control cmd/motor-control/main.go
-env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags "-w" -o bin/sonar-reader cmd/sonar-reader/main.go
-env GOOS=linux GOARCH=arm GOARM=6 go build -ldflags "-w" -o bin/web-bridge cmd/web-bridge/main.go
-```
-
-The executables in `/bin` can then be copied over to the Pi via `ssh`.
-
-## Tests
-
-Run the Go test suite from the `go` directory:
-
-```bash
-go test ./...
-```
-
-Current automated coverage focuses on:
-
-- command parsing behavior in `cmd/web-bridge`
-- environment fallback behavior in `pkg/common`
-
-## STM32
-
-A key goal for this project is to move sonar sampling to an STM32 microcontroller instead of using GPIO on the Raspberry Pi. This should make sonar readings more accurate thanks to the realtime timing of the MCU.
+Targets the [STM32F3DISCOVERY](https://www.st.com/en/evaluation-tools/stm32f3discovery.html) board, using a [custom fork](https://github.com/tristanpenman/tinygo) of TinyGo. I hope to merge these changes upstream once stabilised.
 
 ### TinyGo Sonar
 
-TinyGo firmware scaffold now exists at `firmware/sonar` and uses UART to stream framed sonar samples to a host.
-
-Build firmware (requires `tinygo`):
+Scaffold at `firmware/sonar` streams framed sonar samples over UART.
 
 ```bash
 make tinygo-sonar
 ```
 
-### TinyGo Hello World (UART)
+Installation:
 
-A second firmware example is available at `firmware/hello`. It writes `Hello, World from STM32 over UART!` once per second at `115200` baud and echoes incoming bytes from the host. This is useful for debugging.
+```bash
+./scripts/update-firmware.sh sonar
+```
 
-Build firmware (requires `tinygo`):
+### TinyGo hello UART sample
+
+The `firmware/hello` example writes a UART heartbeat and echoes host bytes. This can be useful for debugging.
 
 ```bash
 make tinygo-hello
 ```
+
+Installation:
+
+```bash
+./scripts/update-firmware.sh hello
+```
+
+## Tests
+
+From repo root:
+
+```bash
+make test
+```
+
+Coverage currently emphasizes:
+
+- command parsing in `cmd/web-bridge`
+- env fallback logic in `pkg/common`
+
+## Photos
+
+Prototype build photos are in [`./photos`](./photos), including:
+
+- early prototype on Pi 3
+- migration to Pi Zero W
+- sonar board soldering progress
 
 ## License
 
