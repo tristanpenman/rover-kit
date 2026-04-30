@@ -5,18 +5,19 @@
   * ~~Dockerfile or build scripts for ARMv6~~
   * ~~Implement motor driver using Gobot~~
   * ~~Implement motor driver using periph library~~
-  * Modularise sonar reader (**in progress**)
-  * Implement periph provider for sonar
+  * ~~Modularise sonar reader~~
+  * Implement periph provider for sonar (**in progress**)
 
 * Tests
-  * Test harness for motor and sonar modules
-    * Parser and validation tests for motor payloads 
-    * Parser and validation tests for sonar payloads 
-  * Integration tests with a mocked MQTT broker to validate publish/subscribe flow
+  * Test harness for motor and sonar modules (**in progress**)
+    * Parser and validation tests for motor payloads
+    * Parser and validation tests for sonar payloads
+  * Integration tests
+    * Mocked MQTT broker to validate publish/subscribe flow
 
 * Microcontroller
-  * Basic structure for STM32 firmware
-  * Explore using TinyGo or Embedded Go
+  * ~~Basic structure for STM32 firmware~~
+  * Explore using TinyGo or Embedded Go (**in progress**)
   * Define UART protocol for sonar readings
   * Full STM32 based sonar receiver
 
