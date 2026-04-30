@@ -24,8 +24,8 @@ func NewPeriphProvider() (*PeriphProvider, error) {
 	}, nil
 }
 
-func (p *PeriphProvider) Sample(context.Context) (Reading, error) {
-	panic("implement me")
+func (p *PeriphProvider) Open(context.Context) chan Reading {
+	return make(chan Reading)
 }
 
 func (p *PeriphProvider) Close(context.Context) error {

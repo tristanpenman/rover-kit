@@ -12,7 +12,7 @@ type Reading struct {
 }
 
 type Provider interface {
-	Sample(ctx context.Context) (Reading, error)
+	Open(ctx context.Context) chan Reading
 
 	Close(ctx context.Context) error
 }

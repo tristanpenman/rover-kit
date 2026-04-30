@@ -67,6 +67,13 @@ func main() {
 	// mqtt handlers
 	opts.SetOnConnectHandler(func(client mqtt.Client) {
 		log.Printf("connected to broker=%s", brokerURL)
+
+		// start reading from sonar provider
+		c := provider.Open(ctx)
+		for reading := range c {
+			fmt.Println("Received:", reading)
+			client.Publish(defaultTopic, 0, false, reading)
+		}
 	})
 	opts.SetConnectionLostHandler(func(_ mqtt.Client, err error) {
 		log.Printf("connection lost: %v", err)
