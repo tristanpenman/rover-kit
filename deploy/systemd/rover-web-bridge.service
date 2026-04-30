@@ -1,0 +1,16 @@
+[Unit]
+Description=Rover web bridge service
+Wants=network-online.target mosquitto.service
+After=network-online.target mosquitto.service
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/rover-kit
+Environment=MQTT_BROKER=tcp://localhost:1883
+ExecStart=/opt/rover-kit/bin/web-bridge
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

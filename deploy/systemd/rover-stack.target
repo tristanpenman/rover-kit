@@ -1,0 +1,4 @@
+[Unit]
+Description=Rover application stack
+Wants=mosquitto.service rover-motor-control.service rover-sonar-reader.service rover-web-bridge.service
+After=mosquitto.service
