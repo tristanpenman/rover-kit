@@ -23,6 +23,7 @@ import (
 const (
 	defaultBrokerURL     = "tcp://localhost:1883"
 	defaultMotorCmdTopic = "rover/motor/cmd"
+	defaultSonarTopic    = "rover/sonar/sample"
 )
 
 type wsServer struct {
@@ -42,10 +43,9 @@ type throttleResponse struct {
 	Active bool               `json:"active"`
 }
 
-func newWSServer(mqttClient mqtt.Client, motorCmdTopic string) *wsServer {
+func newWSServer(motorCmdTopic string) *wsServer {
 	return &wsServer{
 		clients:       make(map[*websocket.Conn]struct{}),
-		mqttClient:    mqttClient,
 		motorCmdTopic: motorCmdTopic,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(_ *http.Request) bool { return true },
@@ -104,7 +104,7 @@ func (s *wsServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("forwarding message: %v", message)
 		s.mqttClient.Publish(defaultMotorCmdTopic, 0, false, message)
 
-		if writeErr := conn.WriteJSON(message); writeErr != nil {
+		if writeErr := conn.WriteMessage(websocket.TextMessage, message); writeErr != nil {
 			log.Printf("websocket write json error: %v", writeErr)
 			return
 		}
@@ -154,8 +154,8 @@ func staticDirPath(dir string) string {
 
 func main() {
 	host := flag.String("host", "0.0.0.0", "interface to bind")
-	port := flag.Int("port", 8000, "port to bind")
-	staticDir := flag.String("static-dir", "web", "path to static web assets")
+	port := flag.Int("port", 7200, "port to bind")
+	staticDir := flag.String("static-dir", "static", "path to static web assets")
 	flag.Parse()
 
 	// mqtt configuration
@@ -166,27 +166,46 @@ func main() {
 	opts.AddBroker(brokerURL)
 	opts.SetClientID(clientID)
 
+	server := newWSServer(motorCmdTopic)
+
 	// mqtt handlers
 	opts.SetOnConnectHandler(func(client mqtt.Client) {
 		log.Printf("connected to broker=%s", brokerURL)
+
+		token := client.Subscribe(defaultSonarTopic, 1, func(_ mqtt.Client, msg mqtt.Message) {
+			log.Printf("received sonar message: %s", string(msg.Payload()))
+
+			for conn := range server.clients {
+				if err := conn.WriteMessage(websocket.TextMessage, msg.Payload()); err != nil {
+					log.Printf("websocket write error: %v", err)
+				}
+			}
+		})
+
+		token.Wait()
+		if err := token.Error(); err != nil {
+			log.Printf("failed to subscribe topic=%s err=%v", defaultSonarTopic, err)
+			return
+		}
+		log.Printf("subscribed topic=%s", defaultSonarTopic)
+
 	})
 	opts.SetConnectionLostHandler(func(_ mqtt.Client, err error) {
 		log.Printf("connection lost: %v", err)
 	})
 
 	// mqtt connection
-	client := mqtt.NewClient(opts)
-	connectToken := client.Connect()
+	server.mqttClient = mqtt.NewClient(opts)
+	connectToken := server.mqttClient.Connect()
 	connectToken.Wait()
 	if err := connectToken.Error(); err != nil {
 		log.Fatalf("failed to connect to broker=%s err=%v", brokerURL, err)
 	}
 
-	defer client.Disconnect(250)
+	defer server.mqttClient.Disconnect(250)
 
 	// setup web server
 	webRoot := staticDirPath(*staticDir)
-	server := newWSServer(client, motorCmdTopic)
 	mux := http.NewServeMux()
 	mux.Handle("/ws", http.HandlerFunc(server.websocketHandler))
 	mux.Handle("/", http.FileServer(http.Dir(webRoot)))

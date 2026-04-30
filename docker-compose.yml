@@ -21,7 +21,9 @@ services:
 
   cmd-web-bridge:
     <<: *cmd
-    command: ["go", "run", "cmd/web-bridge/main.go"]
+    command: ["go", "run", "cmd/web-bridge/main.go", "--static-dir", "/app/cmd/web-bridge/static"]
+    ports:
+      - "7200:7200"
 
   mqtt:
     build:

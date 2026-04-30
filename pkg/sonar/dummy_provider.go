@@ -11,7 +11,7 @@ func (p *DummyProvider) Open(context.Context) chan Reading {
 	c := make(chan Reading)
 
 	go func() {
-		for i := 1; i <= 10; i++ {
+		for {
 			c <- Reading{
 				DistanceCM: 0,
 				DurationUS: 0,
@@ -19,7 +19,6 @@ func (p *DummyProvider) Open(context.Context) chan Reading {
 			}
 			time.Sleep(1000 * time.Millisecond)
 		}
-		close(c)
 	}()
 
 	return c

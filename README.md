@@ -126,6 +126,8 @@ A demo Docker Compose environment can be started using:
 
 This environment includes MQTT, and will run each of the three commands documented above. Dummy motor drivers and sonar providers will be used. This can be used for quick demos and testing, but is otherwise not very useful.
 
+Once started, the web bridge will be accessible at http://localhost:7200
+
 ## Raspberry Pi Setup
 
 There are some other things you'll need to do on a Raspberry Pi...

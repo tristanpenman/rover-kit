@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -71,12 +72,28 @@ func main() {
 		// start reading from sonar provider
 		c := provider.Open(ctx)
 		for reading := range c {
-			fmt.Println("Received:", reading)
-			client.Publish(defaultTopic, 0, false, reading)
+			log.Println("Received:", reading)
+			// convert reading to JSON
+			jsonReading, err := json.Marshal(reading)
+			if err != nil {
+				log.Printf("failed to marshal reading: %v, error: %v", reading, err)
+				continue
+			}
+			token := client.Publish(defaultTopic, 0, false, jsonReading)
+			if token.Wait() && token.Error() != nil {
+				log.Printf("failed to publish reading: %v, error: %v", reading, token.Error())
+			}
 		}
+
+		// shut down after provider channel is closed
+		log.Println("sonar provider channel closed")
+		cancel()
 	})
+
+	// shut down if connection is lost
 	opts.SetConnectionLostHandler(func(_ mqtt.Client, err error) {
 		log.Printf("connection lost: %v", err)
+		cancel()
 	})
 
 	// mqtt connection
