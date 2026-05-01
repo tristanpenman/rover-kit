@@ -152,6 +152,18 @@ func staticDirPath(dir string) string {
 	return filepath.Join(filepath.Dir(execPath), dir)
 }
 
+// sets headers to prevent browser caching
+func noCache(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set headers to disable caching
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache") // For older HTTP/1.0 clients
+		w.Header().Set("Expires", "0")       // Proxies
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	host := flag.String("host", "0.0.0.0", "interface to bind")
 	port := flag.Int("port", 7200, "port to bind")
@@ -208,7 +220,7 @@ func main() {
 	webRoot := staticDirPath(*staticDir)
 	mux := http.NewServeMux()
 	mux.Handle("/ws", http.HandlerFunc(server.websocketHandler))
-	mux.Handle("/", http.FileServer(http.Dir(webRoot)))
+	mux.Handle("/", noCache(http.FileServer(http.Dir(webRoot))))
 
 	// start listening
 	address := fmt.Sprintf("%s:%d", *host, *port)
