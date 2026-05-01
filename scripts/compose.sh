@@ -7,8 +7,10 @@ set -euo pipefail
 command -v docker >/dev/null 2>&1 || { echo "error: docker is required" >&2; exit 1; }
 docker compose version >/dev/null 2>&1 || { echo "error: docker compose v2 is required" >&2; exit 1; }
 
+profile=${1:-demo}
+
 compose() {
-  docker compose --profile demo "$@";
+  docker compose --profile "$profile" "$@";
 }
 
 echo "==> Building images"
