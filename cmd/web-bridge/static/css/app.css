@@ -1,4 +1,5 @@
 * {
+  box-sizing: border-box;
   font-family: Arial, serif;
   margin: 0;
 }
@@ -12,13 +13,18 @@ html, body {
 }
 
 body {
-  overflow: hidden;
+  background: #0f1115;
+  color: #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   height: 100%;
+  overflow: hidden;
   padding: 10px;
 }
 
 h3 {
-  margin-top: 10px;
+  color: #cbd5e1;
 }
 
 #buttons {
@@ -29,18 +35,33 @@ h3 {
 }
 
 #buttons > button {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  color: #e5e7eb;
   height: 40px;
+  transition: background 0.15s ease-in-out;
   width: 24%;
 }
 
+#buttons > button:hover {
+  background: #374151;
+}
+
 #messages {
-  border: 1px solid #ccc;
-  margin: 10px 0;
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  flex: 1;
+  margin: 0;
+  overflow-y: auto;
+  padding: 4px 0;
 }
 
 #messages > .message {
   align-items: center;
+  color: #d1d5db;
   display: flex;
-  height: 20px;
-  padding: 1px 4px;
+  min-height: 20px;
+  padding: 2px 8px;
 }

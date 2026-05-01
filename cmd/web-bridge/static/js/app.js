@@ -1,4 +1,4 @@
-const maxMessages = 16;
+const maxMessages = 160;
 
 const buttons = document.createElement('div');
 buttons.id = 'buttons';
