@@ -22,6 +22,7 @@ const (
 	defaultBrokerURL = "tcp://localhost:1883"
 	defaultProvider  = "dummy"
 	defaultTopic     = "rover/sonar/sample"
+	defaultUartPort  = "/dev/ttyUSB0"
 )
 
 func createProvider(name string) (sonar.Provider, error) {
@@ -30,6 +31,13 @@ func createProvider(name string) (sonar.Provider, error) {
 		return &sonar.DummyProvider{}, nil
 	case "periph":
 		provider, err := sonar.NewPeriphProvider()
+		if err != nil {
+			return nil, fmt.Errorf("failed to create sonar provider: %w", err)
+		}
+		return provider, nil
+	case "uart":
+		uartPort := common.EnvOrDefault("SONAR_UART_PORT", defaultUartPort)
+		provider, err := sonar.NewUartProvider(uartPort)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create sonar provider: %w", err)
 		}
