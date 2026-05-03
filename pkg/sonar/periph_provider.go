@@ -87,7 +87,7 @@ func (p *PeriphProvider) Open(context.Context) chan Reading {
 
 			// wait for echo high
 			for p.echo.Read() != gpio.High {
-				if time.Now().Sub(start) > echoTimeout {
+				if time.Since(start) > echoTimeout {
 					log.Printf("timed out waiting for echo high")
 					return
 				}
@@ -97,7 +97,7 @@ func (p *PeriphProvider) Open(context.Context) chan Reading {
 
 			// wait for echo low
 			for p.echo.Read() != gpio.Low {
-				if time.Now().Sub(start) > echoTimeout {
+				if time.Since(start) > echoTimeout {
 					log.Printf("timed out waiting for echo low")
 					return
 				}
