@@ -108,7 +108,7 @@ func (p *PeriphProvider) Open(context.Context) chan Reading {
 			duration := end.Sub(start)
 
 			c <- Reading{
-				DistanceCM: duration.Seconds() / soundSpeedCMPerS,
+				DistanceCM: duration.Seconds() * soundSpeedCMPerS / 2,
 				DurationUS: float64(duration.Microseconds()),
 				Timestamp:  time.Now(),
 			}
