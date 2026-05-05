@@ -53,11 +53,15 @@ docker compose down
 
 ### Demo stack
 
+The full demo stack can be started using Docker Compose. Simply run the `compose.sh` helper script:
+
 ```bash
 ./scripts/compose.sh
 ```
 
-This starts MQTT plus all three commands with dummy drivers/providers for quick demos.
+This starts MQTT plus all three commands using dummy drivers/providers. The web bridge will be started on port 7200:
+
+![Screenshot](./screenshot.png)
 
 ## Raspberry Pi Setup
 
@@ -77,9 +81,11 @@ sudo systemctl status mosquitto
 mosquitto_sub -h localhost -t '$SYS/#' -C 1
 ```
 
-If needed, Go commands allow you to set the broker URL explicitly:
+For development, Go commands allow you to set the broker URL explicitly:
 
 - `MQTT_BROKER=tcp://<pi-hostname-or-ip>:1883`
+
+Otherwise the defaults should be sufficient.
 
 ### Enable I2C
 
@@ -92,7 +98,7 @@ sudo apt install -y python3-pip python3-venv i2c-tools
 
 ### Build binaries
 
-Build directly on the Pi:
+These can be built directly on the Pi:
 
 ```bash
 go build -ldflags "-w" -o bin/motor-control ./cmd/motor-control
@@ -100,26 +106,31 @@ go build -ldflags "-w" -o bin/sonar-reader ./cmd/sonar-reader
 go build -ldflags "-w" -o bin/web-bridge ./cmd/web-bridge
 ```
 
-Or cross-compile from another machine:
+Or cross-compiled from another machine using the provided `Makefile`:
 
 ```bash
 make
 ```
 
-The commands can be run manually, or orchestrated using `systemd`.
+Once compiled, the commands can be run manually, or orchestrated using `systemd`.
 
 ## Systemd
 
-Service templates are provided under `deploy/systemd`:
+Systemd service templates are provided under `deploy/systemd`:
 
 - `rover-motor-control.service`
 - `rover-sonar-reader.service`
 - `rover-web-bridge.service`
-- `rover-stack.target` (optional convenience target)
+
+This includes an optional convenience target:
+
+- `rover-stack.target`
 
 ### Installation
 
 This example assumes the repo is deployed at `/opt/rover-kit` and binaries are in `/opt/rover-kit/bin`.
+
+From your working directory:
 
 ```bash
 sudo mkdir -p /opt/rover-kit/bin
@@ -150,7 +161,9 @@ sudo journalctl -u rover-motor-control -u rover-sonar-reader -u rover-web-bridge
 
 ## Running Commands Manually
 
-### Motor control
+For development, it is convenient to run commands manually.
+
+### Motor Control
 
 ```bash
 go run ./cmd/motor-control
@@ -162,7 +175,7 @@ Environment variables:
 - `MQTT_TOPIC` (default `rover/motor/cmd`)
 - `MQTT_CLIENT_ID` (default auto-generated)
 - `MOTOR_COMMAND_COOLDOWN_MS` (default `0`)
-- `MOTOR_DRIVER` (`dummy`, `gobot`, or `periph` - default to `dummy`)
+- `MOTOR_DRIVER` (`dummy`, `gobot`, or `periph`; defaults to `dummy`)
 
 Test by injecting commands using `mosquitto_pub`:
 
@@ -184,13 +197,14 @@ Environment variables:
 - `MQTT_BROKER` (default `tcp://localhost:1883`)
 - `MQTT_TOPIC` (default `rover/sonar/sample`)
 - `MQTT_CLIENT_ID` (default auto-generated)
-- `SONAR_PROVIDER` (`dummy`, `periph` or `uart` - default to `dummy`)
+- `SONAR_PROVIDER` (`dummy`, `periph` or `uart`; defaults to `dummy`)
 
 ```bash
 mosquitto_pub -h localhost -p 1883 -t rover/sonar/sample
 ```
 
-Note: The `uart` sonar provider is still in development.
+> [!WARNING]
+> The `uart` sonar provider is still in development.
 
 ### Web Bridge
 
@@ -200,11 +214,14 @@ go run ./cmd/web-bridge
 
 Starts a local web server on port 7200.
 
-## Firmware
+## STM32 Firmware
 
-Provides firmware for STM32 microcontrollers to collect ultrasonic distance readings via UART.
+> [!WARNING]
+> This section is currently a work in progress.
 
-Targets the [STM32F3DISCOVERY](https://www.st.com/en/evaluation-tools/stm32f3discovery.html) board, using a [custom fork](https://github.com/tristanpenman/tinygo) of TinyGo. I hope to merge these changes upstream once stabilised.
+This project also provides [firmware](./firmware/) for STM32 microcontrollers to collect ultrasonic distance readings via UART.
+
+We target the [STM32F3DISCOVERY](https://www.st.com/en/evaluation-tools/stm32f3discovery.html) and [STM32F4DISCOVERY](https://www.st.com/en/evaluation-tools/stm32f4discovery.html) boards, using a [custom fork](https://github.com/tristanpenman/tinygo) of TinyGo. I hope to merge these changes upstream once stabilised.
 
 ### TinyGo Sonar
 
@@ -236,7 +253,7 @@ Installation:
 
 ## Tests
 
-From repo root:
+From your working directory:
 
 ```bash
 make test
