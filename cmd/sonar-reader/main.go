@@ -68,7 +68,7 @@ func main() {
 	// mqtt configuration
 	brokerURL := common.EnvOrDefault("MQTT_BROKER", defaultBrokerURL)
 	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("motor-control-%d", time.Now().UnixNano()))
-	_ = common.EnvOrDefault("MQTT_TOPIC", defaultTopic)
+	topic := common.EnvOrDefault("MQTT_TOPIC", defaultTopic)
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerURL)
 	opts.SetClientID(clientID)
@@ -87,7 +87,7 @@ func main() {
 				log.Printf("failed to marshal reading: %v, error: %v", reading, err)
 				continue
 			}
-			token := client.Publish(defaultTopic, 0, false, jsonReading)
+			token := client.Publish(topic, 0, false, jsonReading)
 			if token.Wait() && token.Error() != nil {
 				log.Printf("failed to publish reading: %v, error: %v", reading, token.Error())
 			}
