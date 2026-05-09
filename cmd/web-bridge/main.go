@@ -65,6 +65,16 @@ func (s *wsServer) removeClient(conn *websocket.Conn) {
 	delete(s.clients, conn)
 }
 
+func (s *wsServer) snapshotClients() []*websocket.Conn {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]*websocket.Conn, 0, len(s.clients))
+	for c := range s.clients {
+		out = append(out, c)
+	}
+	return out
+}
+
 func (s *wsServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -102,7 +112,7 @@ func (s *wsServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Printf("forwarding message: %v", message)
-		s.mqttClient.Publish(defaultMotorCmdTopic, 0, false, message)
+		s.mqttClient.Publish(s.motorCmdTopic, 0, false, message)
 
 		if writeErr := conn.WriteMessage(websocket.TextMessage, message); writeErr != nil {
 			log.Printf("websocket write json error: %v", writeErr)
@@ -172,7 +182,7 @@ func main() {
 
 	// mqtt configuration
 	brokerURL := common.EnvOrDefault("MQTT_BROKER", defaultBrokerURL)
-	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("motor-control-%d", time.Now().UnixNano()))
+	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("web-bridge-%d", time.Now().UnixNano()))
 	motorCmdTopic := common.EnvOrDefault("MQTT_MOTOR_CMD_TOPIC", defaultMotorCmdTopic)
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerURL)
@@ -187,7 +197,7 @@ func main() {
 		token := client.Subscribe(defaultSonarTopic, 1, func(_ mqtt.Client, msg mqtt.Message) {
 			log.Printf("received sonar message: %s", string(msg.Payload()))
 
-			for conn := range server.clients {
+			for _, conn := range server.snapshotClients() {
 				if err := conn.WriteMessage(websocket.TextMessage, msg.Payload()); err != nil {
 					log.Printf("websocket write error: %v", err)
 				}

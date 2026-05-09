@@ -2,9 +2,7 @@ package sonar
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"time"
 
 	// internal
 	"rover-kit/pkg/common"
@@ -39,29 +37,26 @@ func (p *UartProvider) Open(context.Context) chan Reading {
 	c := make(chan Reading)
 
 	go func() {
+		defer close(c)
+
 		buff := make([]byte, 128)
 		var lb common.LineBuffer
 
 		for {
 			n, err := p.port.Read(buff)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("sonar uart read error: %v", err)
+				return
 			}
 			if n == 0 {
-				fmt.Println("EOF reached")
-				break
+				log.Println("sonar uart EOF reached")
+				return
 			}
 
 			lines := lb.Append(buff[:n])
 			for _, line := range lines {
-				fmt.Println(line)
-			}
-
-			// send fake reading
-			c <- Reading{
-				DistanceCM: 0,
-				DurationUS: 0,
-				Timestamp:  time.Now(),
+				// TODO: parse uart frames into Readings via pkg/uart Decoder
+				log.Printf("sonar uart line: %s", line)
 			}
 		}
 	}()

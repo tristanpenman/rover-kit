@@ -55,19 +55,19 @@ func main() {
 	providerName := common.EnvOrDefault("SONAR_PROVIDER", defaultProvider)
 	provider, err := createProvider(providerName)
 	if err != nil {
-		log.Fatalf("failed to resolve motor driver: %v", err)
+		log.Fatalf("failed to resolve sonar provider: %v", err)
 	}
 
 	// provider cleanup
 	defer func() {
 		if err := provider.Close(ctx); err != nil {
-			log.Printf("failed to close motor driver: %v", err)
+			log.Printf("failed to close sonar provider: %v", err)
 		}
 	}()
 
 	// mqtt configuration
 	brokerURL := common.EnvOrDefault("MQTT_BROKER", defaultBrokerURL)
-	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("motor-control-%d", time.Now().UnixNano()))
+	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("sonar-reader-%d", time.Now().UnixNano()))
 	topic := common.EnvOrDefault("MQTT_TOPIC", defaultTopic)
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerURL)
