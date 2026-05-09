@@ -24,8 +24,8 @@ tinygo-hello:
 
 web-bridge:
 	$(ENV) go build $(FLAGS) -o $(DEST)/web-bridge cmd/web-bridge/main.go
-	@rm -rf $(DEST)/web
-	cp -R cmd/web-bridge/web $(DEST)/web
+	@rm -rf $(DEST)/static
+	cp -R cmd/web-bridge/static $(DEST)/static
 
 test:
 	go test ./...
