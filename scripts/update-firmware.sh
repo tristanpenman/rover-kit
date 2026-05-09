@@ -35,4 +35,4 @@ if [[ -z "$CLI" || ! -x "$CLI" ]]; then
   exit 1
 fi
 
-sudo ${CLI} -c port=SWD -w bin/${VARIATION}-${TARGET}.bin 0x08000000
+sudo ${CLI} -c port=SWD -w bin/${VARIATION}-${TARGET}.bin 0x08000000 -g

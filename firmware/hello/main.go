@@ -12,8 +12,8 @@ var hostUART = machine.DefaultUART
 func main() {
 	hostUART.Configure(machine.UARTConfig{
 		BaudRate: 115200,
-		TX:       machine.PA9,
-    RX:       machine.PA10,
+		TX:       machine.UART_TX_PIN,
+		RX:       machine.UART_RX_PIN,
 	})
 
 	_, _ = hostUART.Write([]byte("hello example booted\r\n"))
