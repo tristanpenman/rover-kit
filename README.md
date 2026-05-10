@@ -39,6 +39,7 @@ Power:
 - `pkg/common` - Message types and broker abstractions
 - `pkg/motor` - `MotorDriver` interface + GPIO implementation
 - `pkg/sonar` - `SonarProvider` interface + GPIO implementation
+- `pkg/uart` - Framing protocol shared between the STM32 firmware and the `uart` sonar provider
 
 ## Running Locally
 
@@ -198,9 +199,12 @@ Environment variables:
 - `MQTT_TOPIC` (default `rover/sonar/sample`)
 - `MQTT_CLIENT_ID` (default auto-generated)
 - `SONAR_PROVIDER` (`dummy`, `periph` or `uart`; defaults to `dummy`)
+- `SONAR_UART_PORT` (default `/dev/ttyUSB0`; only used when `SONAR_PROVIDER=uart`)
+
+Observe published readings using `mosquitto_sub`:
 
 ```bash
-mosquitto_pub -h localhost -p 1883 -t rover/sonar/sample
+mosquitto_sub -h localhost -p 1883 -t rover/sonar/sample
 ```
 
 > [!WARNING]
@@ -212,7 +216,19 @@ mosquitto_pub -h localhost -p 1883 -t rover/sonar/sample
 go run ./cmd/web-bridge
 ```
 
-Starts a local web server on port 7200.
+Starts a local web server (default `0.0.0.0:7200`) that serves the static UI and bridges WebSocket clients to the MQTT broker.
+
+Flags:
+
+- `-host` (default `0.0.0.0`)
+- `-port` (default `7200`)
+- `-static-dir` (default `static`, resolved relative to the executable when not absolute)
+
+Environment variables:
+
+- `MQTT_BROKER` (default `tcp://localhost:1883`)
+- `MQTT_CLIENT_ID` (default auto-generated)
+- `MQTT_MOTOR_CMD_TOPIC` (default `rover/motor/cmd`)
 
 ## STM32 Firmware
 
@@ -262,7 +278,8 @@ make test
 Coverage currently emphasizes:
 
 - command parsing in `cmd/web-bridge`
-- env fallback logic in `pkg/common`
+- env fallback logic and the line buffer in `pkg/common`
+- the periph motor driver in `pkg/motor`
 
 ## Photos
 
