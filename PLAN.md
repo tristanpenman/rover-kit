@@ -1,12 +1,12 @@
 # Plan
 
-* Refactoring
+* ~~Refactoring~~
   * ~~Port web bridge code to Go~~
   * ~~Dockerfile or build scripts for ARMv6~~
   * ~~Implement motor driver using Gobot~~
   * ~~Implement motor driver using periph library~~
   * ~~Modularise sonar reader~~
-  * Implement periph provider for sonar (**in progress**)
+  * ~~Implement periph provider for sonar~~
 
 * Tests
   * Test harness for motor and sonar modules (**in progress**)
@@ -17,8 +17,8 @@
 
 * Microcontroller
   * ~~Basic structure for STM32 firmware~~
-  * Explore using TinyGo or Embedded Go (**in progress**)
-  * Define UART protocol for sonar readings
+  * ~~Define UART protocol for sonar readings~~
+  * Implement sonar reader using TinyGo (**in progress**)
   * Full STM32 based sonar receiver
 
 * Future
