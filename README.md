@@ -43,6 +43,10 @@ Power:
 
 ## Running Locally
 
+To develop individual components, you can run an MQTT broker using Docker.
+
+Alternatively, you can run a full "demo" stack that uses dummy `Provider` and `Driver` implementations.
+
 ### MQTT broker (PC)
 
 Install and run [Mosquitto](https://mosquitto.org/) via Docker Compose:
