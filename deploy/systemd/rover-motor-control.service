@@ -5,7 +5,7 @@ After=network-online.target mosquitto.service
 
 [Service]
 Type=simple
-User=pi
+User=rover
 WorkingDirectory=/opt/rover-kit
 Environment=MQTT_BROKER=tcp://localhost:1883
 ExecStart=/opt/rover-kit/bin/motor-control
