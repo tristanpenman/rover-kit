@@ -78,7 +78,7 @@ func (d *GobotDriver) Stop(context.Context) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	for motor := 1; motor <= 4; motor++ {
+	for motor := 0; motor < 4; motor++ {
 		if err := d.setMotor(motor, 0); err != nil {
 			return fmt.Errorf("stop motor %d: %w", motor, err)
 		}
@@ -91,8 +91,7 @@ func (d *GobotDriver) Forwards(context.Context) error {
 	defer d.mu.Unlock()
 
 	values := [4]float64{-1, 1, -1, 1}
-	for idx, value := range values {
-		motor := idx + 1
+	for motor, value := range values {
 		if err := d.setMotor(motor, value); err != nil {
 			return fmt.Errorf("forwards motor %d: %w", motor, err)
 		}
@@ -105,8 +104,7 @@ func (d *GobotDriver) Backwards(context.Context) error {
 	defer d.mu.Unlock()
 
 	values := [4]float64{1, -1, 1, -1}
-	for idx, value := range values {
-		motor := idx + 1
+	for motor, value := range values {
 		if err := d.setMotor(motor, value); err != nil {
 			return fmt.Errorf("backwards motor %d: %w", motor, err)
 		}
@@ -118,7 +116,7 @@ func (d *GobotDriver) SpinCW(context.Context) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	for motor := 1; motor <= 4; motor++ {
+	for motor := 0; motor < 4; motor++ {
 		if err := d.setMotor(motor, 1); err != nil {
 			return fmt.Errorf("spin_cw motor %d: %w", motor, err)
 		}
@@ -130,7 +128,7 @@ func (d *GobotDriver) SpinCCW(context.Context) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	for motor := 1; motor <= 4; motor++ {
+	for motor := 0; motor < 4; motor++ {
 		if err := d.setMotor(motor, -1); err != nil {
 			return fmt.Errorf("spin_ccw motor %d: %w", motor, err)
 		}
@@ -143,7 +141,7 @@ func (d *GobotDriver) Throttle(_ context.Context, value float64) (bool, error) {
 	defer d.mu.Unlock()
 
 	if math.Abs(value) <= d.threshold {
-		for motor := 1; motor <= 4; motor++ {
+		for motor := 0; motor < 4; motor++ {
 			if err := d.setMotor(motor, 0); err != nil {
 				return false, fmt.Errorf("threshold stop motor %d: %w", motor, err)
 			}
@@ -152,8 +150,7 @@ func (d *GobotDriver) Throttle(_ context.Context, value float64) (bool, error) {
 	}
 
 	values := [4]float64{value, -value, value, -value}
-	for idx, throttle := range values {
-		motor := idx + 1
+	for motor, throttle := range values {
 		if err := d.setMotor(motor, throttle); err != nil {
 			return false, fmt.Errorf("throttle motor %d: %w", motor, err)
 		}
