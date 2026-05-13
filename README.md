@@ -6,13 +6,14 @@ Adventures in building a toy rover that can respond to commands over Wi-Fi and s
 
 ## Overview
 
-This project is inspired by [Mat Kelcey's Drivebot post](https://matpalm.com/blog/drivebot/), but focuses more hardware hacking and a Go + MQTT software stack.
+This project is inspired by [Mat Kelcey's Drivebot post](https://matpalm.com/blog/drivebot/), but focuses on hardware hacking with a Go + MQTT software stack. It is intended to serve as an end-to-end Raspberry Pi robotics example. Motors are driven using MQTT commands, sonar readings are published back as telemetry, and a browser UI talks to the rover through a WebSocket bridge.
 
 Key characteristics:
 
-- Control and telemetry are split into three Go commands.
-- Components communicate over MQTT topics.
-- The codebase includes local GPIO implementations for motor control and sonar measurements.
+- Control and telemetry are split into three Go commands so each can be explored independently.
+- Components communicate over MQTT topics, which keeps the web UI, motor control, and sensor sampling loosely coupled.
+- The codebase includes dummy implementations for local development, and GPIO/I2C/UART implementations for Raspberry Pi hardware.
+- `systemd` units are included so the complete rover stack can start automatically when the Pi boots.
 
 Hardware:
 
@@ -40,6 +41,43 @@ Power:
 - `pkg/motor` - `MotorDriver` interface + GPIO implementation
 - `pkg/sonar` - `SonarProvider` interface + GPIO implementation
 - `pkg/uart` - Framing protocol shared between the STM32 firmware and the `uart` sonar provider
+
+## Go Libraries Used
+
+The repository uses a few different Go hardware libraries so you can compare the trade-offs when planning your own Raspberry Pi project.
+
+### Gobot
+
+[Gobot](https://gobot.io/) is a robotics and physical-computing framework for Go. In this repo, we use Gobot's Raspberry Pi adapter and I2C bus and Adafruit Motor HAT drivers to control the 4 DC motors. Gobot is a great option when you want higher-level robotics building blocks, drivers for common devices, and a consistent API across different boards and transports.
+
+Activate the `gobot` motor driver using the `MOTOR_DRIVER` environment variable:
+
+```bash
+MOTOR_DRIVER=gobot go run ./cmd/motor-control
+```
+
+### Periph
+
+[Periph](https://periph.io/) is a lower-level Go hardware stack for Linux SBCs (single-board computers). In this repo, we use Periph to connect to the PCA9685 chip on the Motor HAT, and to perform direct GPIO pulse timing with HC-SR04 sensors. It is useful when you want idiomatic Go access to Linux GPIO, I2C, SPI, and PWM without bringing in a larger robotics framework.
+
+The `periph` motor driver and sonar provider can be activated using the `MOTOR_DRIVER` and `SONAR_PROVIDER` environment variables:
+
+```bash
+MOTOR_DRIVER=periph go run ./cmd/motor-control
+SONAR_PROVIDER=periph go run ./cmd/sonar-reader
+```
+
+### Serial
+
+[`go.bug.st/serial`](https://pkg.go.dev/go.bug.st/serial) provides cross-platform serial-port access from Go. The `uart` sonar provider uses it to read framed measurements from a microcontroller attached over USB serial, which is usually exposed on Linux as a device such as `/dev/ttyUSB0` or `/dev/ttyACM0`. This is a practical extension point when a Raspberry Pi is not the best place to perform tight timing, analogue sampling, or real-time control.
+
+The UART sonar provider also requires the path to a UART port:
+
+```bash
+SONAR_PROVIDER=uart SONAR_UART_PORT=/dev/ttyUSB0 go run ./cmd/sonar-reader
+```
+
+Note that the UART provider still a work in progress.
 
 ## Running Locally
 
@@ -121,11 +159,15 @@ Once compiled, the commands can be run manually, or orchestrated using `systemd`
 
 ## Systemd
 
+Running a rover from an SSH session is fine while experimenting, but inconvenient for real world use. `systemd` lets the Pi bring every long-running component online at startup. Mosquitto starts first, then motor control, sonar sampling, and the web bridge can run as managed services without you typing three separate commands.
+
 Systemd service templates are provided under `deploy/systemd`:
 
 - `rover-motor-control.service`
 - `rover-sonar-reader.service`
 - `rover-web-bridge.service`
+
+You may need to update the user configured in these files before deploying to your device.
 
 This includes an optional convenience target:
 
@@ -163,6 +205,29 @@ sudo systemctl enable --now rover-stack.target
 sudo systemctl status rover-motor-control rover-sonar-reader rover-web-bridge
 sudo journalctl -u rover-motor-control -u rover-sonar-reader -u rover-web-bridge -f
 ```
+
+## Debugging Wi-Fi with USB OTG Ethernet
+
+The Raspberry Pi Zero W has no built-in Ethernet jack, and Wi-Fi is often the first thing to fail when moving between locations. USB OTG Ethernet is a quick escape hatch. When the Pi is connected to your laptop via the data-capable micro-USB port, it appears as a USB network adapter and you can SSH to it without relying on Wi-Fi.
+
+For newer Raspberry Pi OS images, Raspberry Pi Imager can enable USB gadget mode during image customisation. On an existing image, the classic `g_ether` setup is:
+
+1. Edit `/boot/firmware/config.txt` on Bookworm/Trixie, or `/boot/config.txt` on older images, and add:
+
+   ```ini
+   dtoverlay=dwc2
+   ```
+
+2. Edit `/boot/firmware/cmdline.txt` on Bookworm/Trixie, or `/boot/cmdline.txt` on older images. Keep the file as a single line and add this immediately after `rootwait`:
+
+   ```ini
+   modules-load=dwc2,g_ether
+   ```
+
+3. Enable SSH, reboot, and connect the laptop to the Pi Zero W's USB data/OTG port, not the power-only port.
+4. Try SSH by hostname first, for example `ssh pi@rover.local`. If name resolution is not working, inspect the new USB network interface on the laptop and assign or discover an address there.
+
+This is especially useful when the rover is physically assembled: you can leave the motor battery disconnected, power the Pi from the laptop, inspect logs with `journalctl`, fix Wi-Fi credentials, and restart services.
 
 ## Running Commands Manually
 
