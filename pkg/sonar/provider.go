@@ -6,6 +6,7 @@ import (
 )
 
 type Reading struct {
+	SonarIndex int
 	DistanceCM float64
 	DurationUS float64
 	Timestamp  time.Time

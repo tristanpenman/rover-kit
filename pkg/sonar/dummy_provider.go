@@ -13,6 +13,7 @@ func (p *DummyProvider) Open(context.Context) chan Reading {
 	go func() {
 		for {
 			c <- Reading{
+				SonarIndex: 0,
 				DistanceCM: 0,
 				DurationUS: 0,
 				Timestamp:  time.Now(),

@@ -119,6 +119,7 @@ func (p *PeriphProvider) Open(context.Context) chan Reading {
 			duration := end.Sub(start)
 
 			c <- Reading{
+				SonarIndex: 0,
 				DistanceCM: duration.Seconds() * soundSpeedCMPerS / 2,
 				DurationUS: float64(duration.Microseconds()),
 				Timestamp:  time.Now(),

@@ -110,6 +110,7 @@ func sampleToReadings(sample uart.SampleV1) []Reading {
 		}
 
 		readings = append(readings, Reading{
+			SonarIndex: 0,
 			DistanceCM: distanceCM,
 			DurationUS: 0,
 			Timestamp:  now,
