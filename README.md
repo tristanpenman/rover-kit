@@ -276,8 +276,7 @@ Observe published readings using `mosquitto_sub`:
 mosquitto_sub -h localhost -p 1883 -t rover/sonar/sample
 ```
 
-> [!WARNING]
-> The `uart` sonar provider is still in development.
+The `uart` provider reads framed samples from the UART / serial port and publishes distances as sonar readings.
 
 ### Web Bridge
 
