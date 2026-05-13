@@ -141,6 +141,30 @@ func (d *PeriphDriver) Forwards(context.Context) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
+	for motor := 1; motor <= 4; motor++ {
+		if err := d.setMotor(motor, 1); err != nil {
+			return fmt.Errorf("spin_cw motor %d: %w", motor, err)
+		}
+	}
+	return nil
+}
+
+func (d *PeriphDriver) Backwards(context.Context) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	for motor := 1; motor <= 4; motor++ {
+		if err := d.setMotor(motor, -1); err != nil {
+			return fmt.Errorf("spin_ccw motor %d: %w", motor, err)
+		}
+	}
+	return nil
+}
+
+func (d *PeriphDriver) SpinCW(context.Context) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	values := [4]float64{-1, 1, -1, 1}
 	for idx, value := range values {
 		motor := idx + 1
@@ -151,7 +175,7 @@ func (d *PeriphDriver) Forwards(context.Context) error {
 	return nil
 }
 
-func (d *PeriphDriver) Backwards(context.Context) error {
+func (d *PeriphDriver) SpinCCW(context.Context) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -160,30 +184,6 @@ func (d *PeriphDriver) Backwards(context.Context) error {
 		motor := idx + 1
 		if err := d.setMotor(motor, value); err != nil {
 			return fmt.Errorf("backwards motor %d: %w", motor, err)
-		}
-	}
-	return nil
-}
-
-func (d *PeriphDriver) SpinCW(context.Context) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
-	for motor := 1; motor <= 4; motor++ {
-		if err := d.setMotor(motor, 1); err != nil {
-			return fmt.Errorf("spin_cw motor %d: %w", motor, err)
-		}
-	}
-	return nil
-}
-
-func (d *PeriphDriver) SpinCCW(context.Context) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
-	for motor := 1; motor <= 4; motor++ {
-		if err := d.setMotor(motor, -1); err != nil {
-			return fmt.Errorf("spin_ccw motor %d: %w", motor, err)
 		}
 	}
 	return nil
