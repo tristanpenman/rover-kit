@@ -27,7 +27,7 @@ type sensor struct {
 var sensors = [sensorCount]sensor{
 	{
 		trigger: machine.PA0,
-		echo: machine.PA1,
+		echo:    machine.PA1,
 	},
 }
 

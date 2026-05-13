@@ -56,7 +56,9 @@ func NewPeriphDriverWithThreshold(threshold float64) (*PeriphDriver, error) {
 	dev, err := pca9685.NewI2C(bus, defaultPeriphMotorHatI2C)
 	if err != nil {
 		_ = bus.Close()
-		return nil, fmt.Errorf("initialize pca9685 on i2c address 0x%X: %w", defaultPeriphMotorHatI2C, err)
+		return nil, fmt.Errorf("initialize pca9685 on i2c address 0x%X: %w",
+			defaultPeriphMotorHatI2C, err)
+
 	}
 	if err := dev.SetPwmFreq(1600); err != nil {
 		_ = bus.Close()
