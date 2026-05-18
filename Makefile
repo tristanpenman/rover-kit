@@ -6,15 +6,18 @@ FLAGS=-ldflags "-w"
 
 ENV=env GOOS=linux GOARCH=$(GOARCH) GOARM=$(GOARM)
 
-.PHONY: all clean motor-control sonar-reader test tinygo-hello tinygo-sonar web-bridge
+.PHONY: all camera-reader clean motor-control sonar-reader test tinygo-hello tinygo-sonar web-bridge
 
-all: motor-control sonar-reader tinygo-sonar tinygo-hello web-bridge
+all: motor-control sonar-reader camera-reader tinygo-sonar tinygo-hello web-bridge
 
 motor-control:
 	$(ENV) go build $(FLAGS) -o $(DEST)/motor-control cmd/motor-control/main.go
 
 sonar-reader:
 	$(ENV) go build $(FLAGS) -o $(DEST)/sonar-reader cmd/sonar-reader/main.go
+
+camera-reader:
+	$(ENV) go build $(FLAGS) -o $(DEST)/camera-reader cmd/camera-reader/main.go
 
 tinygo-sonar:
 	tinygo build -target=$(TARGET) -o $(DEST)/sonar-$(TARGET).bin ./firmware/sonar
@@ -31,4 +34,4 @@ test:
 	go test ./...
 
 clean:
-	rm -rf ${DEST}/{motor-control,sonar-reader,sonar-*.bin,hello-*.bin,web-bridge,web}
+	rm -rf ${DEST}/{motor-control,sonar-reader,camera-reader,sonar-*.bin,hello-*.bin,web-bridge,web}

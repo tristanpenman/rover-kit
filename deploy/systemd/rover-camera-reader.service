@@ -1,0 +1,17 @@
+[Unit]
+Description=Rover camera reader service
+Wants=network-online.target mosquitto.service
+After=network-online.target mosquitto.service
+
+[Service]
+Type=simple
+User=rover
+WorkingDirectory=/opt/rover-kit
+Environment=MQTT_BROKER=tcp://localhost:1883
+Environment=CAMERA_PROVIDER=libcamera
+ExecStart=/opt/rover-kit/bin/camera-reader
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

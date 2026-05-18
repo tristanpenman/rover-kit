@@ -10,7 +10,7 @@ This project is inspired by [Mat Kelcey's Drivebot post](https://matpalm.com/blo
 
 Key characteristics:
 
-- Control and telemetry are split into three Go commands so each can be explored independently.
+- Control and telemetry are split into separate Go commands so each can be explored independently.
 - Components communicate over MQTT topics, which keeps the web UI, motor control, and sensor sampling loosely coupled.
 - The codebase includes dummy implementations for local development, and GPIO/I2C/UART implementations for Raspberry Pi hardware.
 - `systemd` units are included so the complete rover stack can start automatically when the Pi boots.
@@ -33,6 +33,7 @@ Power:
 
 - `cmd/motor-control` - Subscribes to typed motor commands and invokes a `MotorDriver`.
 - `cmd/sonar-reader` - Samples via `SonarProvider` and publishes distance events.
+- `cmd/camera-reader` - Captures Raspberry Pi camera frames and publishes image events.
 - `cmd/web-bridge` - HTTP/WebSocket bridge into broker topics.
 
 ### Shared packages
@@ -40,6 +41,7 @@ Power:
 - `pkg/common` - Message types and broker abstractions
 - `pkg/motor` - `MotorDriver` interface + GPIO implementation
 - `pkg/sonar` - `SonarProvider` interface + GPIO implementation
+- `pkg/camera` - camera `Provider` interface + dummy and Raspberry Pi camera implementations
 - `pkg/uart` - Framing protocol shared between the STM32 firmware and the `uart` sonar provider
 
 ## Go Libraries Used
@@ -146,6 +148,7 @@ These can be built directly on the Pi:
 ```bash
 go build -ldflags "-w" -o bin/motor-control ./cmd/motor-control
 go build -ldflags "-w" -o bin/sonar-reader ./cmd/sonar-reader
+go build -ldflags "-w" -o bin/camera-reader ./cmd/camera-reader
 go build -ldflags "-w" -o bin/web-bridge ./cmd/web-bridge
 ```
 
@@ -165,6 +168,7 @@ Systemd service templates are provided under `deploy/systemd`:
 
 - `rover-motor-control.service`
 - `rover-sonar-reader.service`
+- `rover-camera-reader.service`
 - `rover-web-bridge.service`
 
 You may need to update the user configured in these files before deploying to your device.
@@ -181,7 +185,7 @@ From your working directory:
 
 ```bash
 sudo mkdir -p /opt/rover-kit/bin
-sudo cp bin/motor-control bin/sonar-reader bin/web-bridge /opt/rover-kit/bin/
+sudo cp bin/motor-control bin/sonar-reader bin/camera-reader bin/web-bridge /opt/rover-kit/bin/
 sudo cp deploy/systemd/*.service deploy/systemd/*.target /etc/systemd/system/
 ```
 
@@ -190,7 +194,7 @@ sudo cp deploy/systemd/*.service deploy/systemd/*.target /etc/systemd/system/
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now mosquitto
-sudo systemctl enable --now rover-motor-control rover-sonar-reader rover-web-bridge
+sudo systemctl enable --now rover-motor-control rover-sonar-reader rover-camera-reader rover-web-bridge
 ```
 
 Optional single-target startup:
@@ -202,8 +206,8 @@ sudo systemctl enable --now rover-stack.target
 ### Monitoring
 
 ```bash
-sudo systemctl status rover-motor-control rover-sonar-reader rover-web-bridge
-sudo journalctl -u rover-motor-control -u rover-sonar-reader -u rover-web-bridge -f
+sudo systemctl status rover-motor-control rover-sonar-reader rover-camera-reader rover-web-bridge
+sudo journalctl -u rover-motor-control -u rover-sonar-reader -u rover-camera-reader -u rover-web-bridge -f
 ```
 
 ## Debugging Wi-Fi with USB OTG Ethernet
@@ -278,6 +282,31 @@ mosquitto_sub -h localhost -p 1883 -t rover/sonar/sample
 
 The `uart` provider reads framed samples from the UART / serial port and publishes distances as sonar readings.
 
+### Camera Reader
+
+```bash
+go run ./cmd/camera-reader
+```
+
+Environment variables:
+
+- `MQTT_BROKER` (default `tcp://localhost:1883`)
+- `MQTT_TOPIC` (default `rover/camera/frame`)
+- `MQTT_CLIENT_ID` (default auto-generated)
+- `CAMERA_PROVIDER` (`dummy` or `libcamera`; defaults to `dummy`)
+- `CAMERA_INTERVAL_MS` (default `1000`)
+- `CAMERA_CAPTURE_TIMEOUT_MS` (default `1000`; only used by `libcamera`)
+- `CAMERA_WIDTH` and `CAMERA_HEIGHT` (optional; only used by `libcamera`)
+- `LIBCAMERA_STILL_PATH` (default `libcamera-still`; only used by `libcamera`)
+
+On Raspberry Pi OS with the camera stack installed, run:
+
+```bash
+CAMERA_PROVIDER=libcamera go run ./cmd/camera-reader
+```
+
+Frames are published as JSON messages with `type: "camera_frame"`, a MIME `content_type`, base64 image `data`, and a timestamp. The web bridge subscribes to this topic and displays the most recent frame in the browser UI.
+
 ### Web Bridge
 
 ```bash
@@ -297,6 +326,8 @@ Environment variables:
 - `MQTT_BROKER` (default `tcp://localhost:1883`)
 - `MQTT_CLIENT_ID` (default auto-generated)
 - `MQTT_MOTOR_CMD_TOPIC` (default `rover/motor/cmd`)
+- `MQTT_SONAR_TOPIC` (default `rover/sonar/sample`)
+- `MQTT_CAMERA_TOPIC` (default `rover/camera/frame`)
 
 ## STM32 Firmware
 
