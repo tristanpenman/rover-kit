@@ -274,6 +274,11 @@ Environment variables:
 - `SONAR_PROVIDER` (`dummy`, `periph` or `uart`; defaults to `dummy`)
 - `SONAR_UART_PORT` (default `/dev/ttyUSB0`; only used when `SONAR_PROVIDER=uart`)
 
+You may also change the default sonar pin IDs, or add a second sonar sensor:
+
+- `SONAR_TRIGGER_PIN_1` / `SONAR_ECHO_PIN_1` (periph only; defaults to `GPIO18` / `GPIO24`)
+- `SONAR_TRIGGER_PIN_2` / `SONAR_ECHO_PIN_2` (periph only; optional second sonar; both must be set)
+
 Observe published readings using `mosquitto_sub`:
 
 ```bash

@@ -99,7 +99,7 @@ func sampleToReadings(sample uart.SampleV1) []Reading {
 	readings := make([]Reading, 0, len(sample.Readings))
 	now := time.Now()
 
-	for _, distance := range sample.Readings {
+	for index, distance := range sample.Readings {
 		if distance == 0xFFFF {
 			continue
 		}
@@ -110,7 +110,7 @@ func sampleToReadings(sample uart.SampleV1) []Reading {
 		}
 
 		readings = append(readings, Reading{
-			SonarIndex: 0,
+			SonarIndex: index,
 			DistanceCM: distanceCM,
 			DurationUS: 0,
 			Timestamp:  now,

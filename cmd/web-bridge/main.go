@@ -121,6 +121,14 @@ func (s *wsServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *wsServer) broadcast(payload []byte) {
+	for _, conn := range s.snapshotClients() {
+		if err := conn.WriteMessage(websocket.TextMessage, payload); err != nil {
+			log.Printf("websocket write error: %v", err)
+		}
+	}
+}
+
 func parseCommand(message []byte) (any, error) {
 	var envelope commandEnvelope
 	if err := json.Unmarshal(message, &envelope); err != nil {
@@ -184,6 +192,8 @@ func main() {
 	brokerURL := common.EnvOrDefault("MQTT_BROKER", defaultBrokerURL)
 	clientID := common.EnvOrDefault("MQTT_CLIENT_ID", fmt.Sprintf("web-bridge-%d", time.Now().UnixNano()))
 	motorCmdTopic := common.EnvOrDefault("MQTT_MOTOR_CMD_TOPIC", defaultMotorCmdTopic)
+	sonarTopic := common.EnvOrDefault("MQTT_SONAR_TOPIC", defaultSonarTopic)
+	cameraTopic := common.EnvOrDefault("MQTT_CAMERA_TOPIC", defaultCameraTopic)
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerURL)
 	opts.SetClientID(clientID)
@@ -194,22 +204,17 @@ func main() {
 	opts.SetOnConnectHandler(func(client mqtt.Client) {
 		log.Printf("connected to broker=%s", brokerURL)
 
-		token := client.Subscribe(defaultSonarTopic, 1, func(_ mqtt.Client, msg mqtt.Message) {
+		token := client.Subscribe(sonarTopic, 1, func(_ mqtt.Client, msg mqtt.Message) {
 			log.Printf("received sonar message: %s", string(msg.Payload()))
-
-			for _, conn := range server.snapshotClients() {
-				if err := conn.WriteMessage(websocket.TextMessage, msg.Payload()); err != nil {
-					log.Printf("websocket write error: %v", err)
-				}
-			}
+			server.broadcast(msg.Payload())
 		})
 
 		token.Wait()
 		if err := token.Error(); err != nil {
-			log.Printf("failed to subscribe topic=%s err=%v", defaultSonarTopic, err)
+			log.Printf("failed to subscribe topic=%s err=%v", sonarTopic, err)
 			return
 		}
-		log.Printf("subscribed topic=%s", defaultSonarTopic)
+		log.Printf("subscribed topic=%s", sonarTopic)
 
 	})
 	opts.SetConnectionLostHandler(func(_ mqtt.Client, err error) {

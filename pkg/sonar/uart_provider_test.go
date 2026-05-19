@@ -21,8 +21,8 @@ func TestSampleToReadingsConvertsMillimeters(t *testing.T) {
 	if readings[0].DistanceCM != 25.0 {
 		t.Fatalf("expected first reading to be 25.0cm, got %f", readings[0].DistanceCM)
 	}
-	if readings[1].SonarIndex != 0 {
-		t.Fatalf("expected second reading sonar index to be 0, got %d", readings[1].SonarIndex)
+	if readings[1].SonarIndex != 2 {
+		t.Fatalf("expected second reading sonar index to be 2, got %d", readings[1].SonarIndex)
 	}
 	if readings[1].DistanceCM != 123.4 {
 		t.Fatalf("expected second reading to be 123.4cm, got %f", readings[1].DistanceCM)
