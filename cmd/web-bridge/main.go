@@ -24,6 +24,7 @@ const (
 	defaultBrokerURL     = "tcp://localhost:1883"
 	defaultMotorCmdTopic = "rover/motor/cmd"
 	defaultSonarTopic    = "rover/sonar/sample"
+	defaultCameraTopic   = "rover/camera/frame"
 )
 
 type wsServer struct {
@@ -216,6 +217,17 @@ func main() {
 		}
 		log.Printf("subscribed topic=%s", sonarTopic)
 
+		token = client.Subscribe(cameraTopic, 1, func(_ mqtt.Client, msg mqtt.Message) {
+			log.Printf("received camera message bytes=%d", len(msg.Payload()))
+			server.broadcast(msg.Payload())
+		})
+
+		token.Wait()
+		if err := token.Error(); err != nil {
+			log.Printf("failed to subscribe topic=%s err=%v", cameraTopic, err)
+			return
+		}
+		log.Printf("subscribed topic=%s", cameraTopic)
 	})
 	opts.SetConnectionLostHandler(func(_ mqtt.Client, err error) {
 		log.Printf("connection lost: %v", err)

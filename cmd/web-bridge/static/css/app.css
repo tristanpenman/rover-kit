@@ -23,6 +23,18 @@ body {
   padding: 10px;
 }
 
+#camera {
+  align-self: center;
+  aspect-ratio: 4 / 3;
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  max-height: 55vh;
+  max-width: 100%;
+  object-fit: contain;
+  width: min(100%, 720px);
+}
+
 h3 {
   color: #cbd5e1;
 }

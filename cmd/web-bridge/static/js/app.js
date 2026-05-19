@@ -1,5 +1,10 @@
 const maxMessages = 160;
 
+const camera = document.createElement('img');
+camera.id = 'camera';
+camera.alt = 'Camera';
+document.body.appendChild(camera);
+
 const buttons = document.createElement('div');
 buttons.id = 'buttons';
 document.body.appendChild(buttons);
@@ -65,6 +70,17 @@ const attemptConnect = () => {
   };
 
   ws.onmessage = (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      if (payload.type === 'camera_frame') {
+        camera.src = `data:${payload.content_type};base64,${payload.data}`;
+        addMessage('camera frame: ' + payload.timestamp);
+        return;
+      }
+    } catch (err) {
+      // Fall through to the event log for non-JSON bridge messages.
+    }
+
     addMessage('ws message: ' + event.data);
   };
 };
