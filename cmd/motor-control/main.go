@@ -108,12 +108,12 @@ func handleMotorCommand(ctx context.Context, driver motor.Driver, payload []byte
 
 func subscriber(ctx context.Context, driver motor.Driver, gate *commandGate) func(_ mqtt.Client, msg mqtt.Message) {
 	return func(_ mqtt.Client, msg mqtt.Message) {
-		log.Printf("received command topic=%s payload=%s", msg.Topic(), msg.Payload())
+		log.Printf("received command topic=%s bytes=%d", msg.Topic(), len(msg.Payload()))
 		err := gate.Run(func() error {
 			return handleMotorCommand(ctx, driver, msg.Payload())
 		})
 		if err != nil {
-			log.Printf("failed to handle command topic=%s payload=%q err=%v", msg.Topic(), msg.Payload(), err)
+			log.Printf("failed to handle command topic=%s bytes=%d err=%v", msg.Topic(), len(msg.Payload()), err)
 		}
 	}
 }

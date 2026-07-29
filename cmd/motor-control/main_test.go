@@ -1,12 +1,40 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"errors"
+	"log"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"rover-kit/pkg/motor"
 )
+
+type testMessage struct {
+	topic   string
+	payload []byte
+}
+
+func (m testMessage) Duplicate() bool   { return false }
+func (m testMessage) Qos() byte         { return 0 }
+func (m testMessage) Retained() bool    { return false }
+func (m testMessage) Topic() string     { return m.topic }
+func (m testMessage) MessageID() uint16 { return 0 }
+func (m testMessage) Payload() []byte   { return m.payload }
+func (m testMessage) Ack()              {}
+
+type testMotorDriver struct {
+	motor.Driver
+	stopErr error
+}
+
+func (d testMotorDriver) Stop(context.Context) error {
+	return d.stopErr
+}
 
 func TestCommandGateSerializesConcurrentCalls(t *testing.T) {
 	gate := newCommandGate(0)
@@ -79,5 +107,38 @@ func TestCommandGateRunReturnsError(t *testing.T) {
 
 	if !errors.Is(err, expectedErr) {
 		t.Fatalf("expected error %v, got %v", expectedErr, err)
+	}
+}
+
+func TestSubscriberDoesNotLogPayload(t *testing.T) {
+	const secret = "secret-marker"
+	payload := []byte(`{"type":"stop","secret":"` + secret + `"}`)
+
+	var logs bytes.Buffer
+	previousWriter := log.Writer()
+	previousFlags := log.Flags()
+	previousPrefix := log.Prefix()
+	log.SetOutput(&logs)
+	log.SetFlags(0)
+	log.SetPrefix("")
+	t.Cleanup(func() {
+		log.SetOutput(previousWriter)
+		log.SetFlags(previousFlags)
+		log.SetPrefix(previousPrefix)
+	})
+
+	handler := subscriber(
+		context.Background(),
+		testMotorDriver{stopErr: errors.New("stop failed")},
+		newCommandGate(0),
+	)
+	handler(nil, testMessage{topic: "rover/motor/cmd", payload: payload})
+
+	got := logs.String()
+	if strings.Contains(got, secret) {
+		t.Fatalf("log contains command payload: %q", got)
+	}
+	if !strings.Contains(got, "topic=rover/motor/cmd") || !strings.Contains(got, "bytes=") {
+		t.Fatalf("log does not contain bounded command metadata: %q", got)
 	}
 }
